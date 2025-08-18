@@ -13,6 +13,9 @@
         }
     ],
     "dataViewDefinition": {
+        "tooltip": {
+            "enabled": true
+        },
         "colorAxis": {
             "mode": "dual",
             "dropTarget": {

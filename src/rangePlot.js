@@ -7,7 +7,7 @@ function parseRangePlotData(jsonString) {
     }
 }
 
-function createRangePlot(data) {
+function createRangePlot(data, mod, allRows) {
     const container = document.getElementById('plot-container');
     if (!container) {
         console.error('Could not find plot-container element');
@@ -23,7 +23,7 @@ function createRangePlot(data) {
     const range = absoluteMax - absoluteMin;
 
     // Create each category row
-    data.data.forEach(item => {
+    data.data.forEach((item, index) => {
         const rowDiv = document.createElement('div');
         rowDiv.className = 'plot-row';
 
@@ -63,6 +63,79 @@ function createRangePlot(data) {
         `;
 
         container.appendChild(rowDiv);
+        
+        // Add tooltip functionality if Spotfire mod and data are available
+        if (mod && allRows && item.rowIndex !== undefined) {
+            const row = allRows[item.rowIndex];
+            
+            // Add hover events to endpoints and value indicator
+            const endpoints = rowDiv.querySelectorAll('.endpoint');
+            const valueIndicator = rowDiv.querySelector('.value-indicator');
+            const rangeSegment = rowDiv.querySelector('.range-segment');
+            
+            // Min endpoint tooltip - use Spotfire's native tooltip
+            if (endpoints[0]) {
+                endpoints[0].addEventListener('mouseenter', () => {
+                    // Use Spotfire's automatic row tooltip which respects the properties dialog settings
+                    mod.controls.tooltip.show(row);
+                });
+                endpoints[0].addEventListener('mouseleave', () => {
+                    mod.controls.tooltip.hide();
+                });
+            }
+            
+            // Max endpoint tooltip  
+            if (endpoints[1]) {
+                endpoints[1].addEventListener('mouseenter', () => {
+                    // Use Spotfire's automatic row tooltip which respects the properties dialog settings
+                    mod.controls.tooltip.show(row);
+                });
+                endpoints[1].addEventListener('mouseleave', () => {
+                    mod.controls.tooltip.hide();
+                });
+            }
+            
+            // Value indicator tooltip
+            if (valueIndicator) {
+                valueIndicator.addEventListener('mouseenter', () => {
+                    // Use Spotfire's automatic row tooltip which respects the properties dialog settings
+                    mod.controls.tooltip.show(row);
+                });
+                valueIndicator.addEventListener('mouseleave', () => {
+                    mod.controls.tooltip.hide();
+                });
+            }
+            
+            // Range segment tooltip - show full row data using Spotfire's row tooltip
+            if (rangeSegment) {
+                rangeSegment.addEventListener('mouseenter', () => {
+                    // Use Spotfire's automatic row tooltip for comprehensive data
+                    mod.controls.tooltip.show(row);
+                });
+                rangeSegment.addEventListener('mouseleave', () => {
+                    mod.controls.tooltip.hide();
+                });
+            }
+        } else {
+            // Fallback tooltips for sample data
+            const endpoints = rowDiv.querySelectorAll('.endpoint');
+            const valueIndicator = rowDiv.querySelector('.value-indicator');
+            const rangeSegment = rowDiv.querySelector('.range-segment');
+            
+            // Simple tooltips for sample data
+            if (endpoints[0]) {
+                endpoints[0].title = `${item.category} - Min: ${item.min}`;
+            }
+            if (endpoints[1]) {
+                endpoints[1].title = `${item.category} - Max: ${item.max}`;
+            }
+            if (valueIndicator) {
+                valueIndicator.title = `${item.category} - Current: ${item.value}`;
+            }
+            if (rangeSegment) {
+                rangeSegment.title = `${item.category} - Range: ${item.min} to ${item.max}, Current: ${item.value}`;
+            }
+        }
     });
 }
 
@@ -71,9 +144,9 @@ window.createRangePlot = createRangePlot;
 window.parseRangePlotData = parseRangePlotData;
 
 // Function to update with new data (can be called externally)
-window.updateRangePlot = function(jsonString) {
+window.updateRangePlot = function(jsonString, mod, allRows) {
     const data = parseRangePlotData(jsonString);
     if (data) {
-        createRangePlot(data);
+        createRangePlot(data, mod, allRows);
     }
 };

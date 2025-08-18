@@ -91,7 +91,8 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
                         min: minValue,
                         max: maxValue,
                         value: currentValue,
-                        color: hexColor
+                        color: hexColor,
+                        rowIndex: i  // Store row index for tooltip access
                     });
                 }
             } catch (error) {
@@ -116,7 +117,8 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
         
         // Call the createRangePlot function with real data
         if (plotData.data.length > 0) {
-            (window as any).createRangePlot(plotData);
+            // Pass mod and allRows for tooltip functionality
+            (window as any).createRangePlot(plotData, mod, allRows);
         } else {
             renderSampleData();
         }
@@ -136,15 +138,16 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
                 "option1": "temperature",
                 "option2": "celsius",
                 "data": [
-                    {"min": 52, "max": 83.5, "value": 65.9, "category": "today", "color": "#ff6b6b"},
-                    {"min": 55.8, "max": 83.5, "value": 69.1, "category": "yesterday", "color": "#4ecdc4"},
-                    {"min": 52, "max": 88.5, "value": 70.4, "category": "week", "color": "#45b7d1"},
-                    {"min": 38.5, "max": 88.5, "value": 65.9, "category": "month", "color": "#96ceb4"},
-                    {"min": -0.8, "max": 88.5, "value": 42.1, "category": "year", "color": "#feca57"}
+                    {"min": 52, "max": 83.5, "value": 65.9, "category": "today", "color": "#ff6b6b", "rowIndex": 0},
+                    {"min": 55.8, "max": 83.5, "value": 69.1, "category": "yesterday", "color": "#4ecdc4", "rowIndex": 1},
+                    {"min": 52, "max": 88.5, "value": 70.4, "category": "week", "color": "#45b7d1", "rowIndex": 2},
+                    {"min": 38.5, "max": 88.5, "value": 65.9, "category": "month", "color": "#96ceb4", "rowIndex": 3},
+                    {"min": -0.8, "max": 88.5, "value": 42.1, "category": "year", "color": "#feca57", "rowIndex": 4}
                 ]
             };
 
-            (window as any).createRangePlot(sampleData);
+            // For sample data, pass null for mod and allRows since we don't have real Spotfire data
+            (window as any).createRangePlot(sampleData, null, null);
         }
     }
 });

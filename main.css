@@ -1,8 +1,103 @@
 body {
     margin: 0;
-    overflow: hidden;
 }
 
 #mod-container {
-    white-space: pre;
+    max-width: 50%;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #2a2a2a;
+    border-radius: 10px;
+}
+
+.plot-row {
+    margin-bottom: 20px;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.category-label {
+    /* font-size: 14px; */
+    color: #999;
+    text-transform: capitalize;
+    width: 80px;
+    flex-shrink: 0;
+}
+
+.plot-container {
+    position: relative;
+    height: 20px;
+    flex: 1;
+    margin-left: 20px;
+}
+
+/* Base rail - absolute min to max across all data */
+.base-rail {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 5px;
+    background-color: #474747;
+    width: 100%;
+    border-radius: 1px;
+}
+
+/* Range segment - from min to max for this category */
+.range-segment {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 4px;
+    /* background-color removed - will be set dynamically via inline styles */
+    border-radius: 2.5px;
+}
+
+/* Endpoint circles */
+.endpoint {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 15px;
+    height: 15px;
+    background-color: #cacaca;
+    border: 1px solid #b4b4b4;
+    border-radius: 50%;
+    z-index: 3;
+}
+
+/* Value indicator */
+.value-indicator {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background-color: #facc15;
+    border: 1px solid #b4b4b4;
+    border-radius: 50%;
+    z-index: 4;
+}
+
+/* Labels */
+.labels {
+    position: relative;
+    height: 25px;
+}
+
+.label {
+    position: absolute;
+    font-size: xx-small;
+    color: #999;
+    transform: translateY(-111%) translatex(-50%);
+}
+
+.value-label {
+    position: absolute;
+    font-size: x-small;
+    color: rgb(162, 162, 162);
+    padding: 2px 6px;
+    border-radius: 3px;
+    transform: translateX(-50%);
+    top: -10px;
 }

@@ -1,0 +1,110 @@
+Location,State,Region,Min_Temp,Max_Temp,Current_Temp
+New York,NY,Northeast,45.2,78.5,62.1
+Los Angeles,CA,West,58.7,89.3,74.2
+Chicago,IL,Midwest,38.9,72.4,55.8
+Houston,TX,South,52.1,91.7,78.9
+Phoenix,AZ,West,61.4,105.8,87.3
+Philadelphia,PA,Northeast,43.8,76.2,59.7
+San Antonio,TX,South,54.3,93.1,79.2
+San Diego,CA,West,59.1,84.6,71.8
+Dallas,TX,South,49.7,88.9,74.5
+San Jose,CA,West,51.2,81.3,68.4
+Austin,TX,South,50.8,90.4,76.1
+Jacksonville,FL,South,57.9,87.2,73.6
+Fort Worth,TX,South,48.5,87.8,73.2
+Columbus,OH,Midwest,41.6,73.9,57.8
+Charlotte,NC,South,46.3,79.1,64.2
+San Francisco,CA,West,48.9,72.5,61.7
+Indianapolis,IN,Midwest,39.7,75.6,58.1
+Seattle,WA,West,42.1,67.8,54.9
+Denver,CO,West,35.4,79.2,59.3
+Washington,DC,South,44.7,77.8,61.5
+Boston,MA,Northeast,38.2,71.4,55.8
+El Paso,TX,South,48.9,92.6,75.4
+Nashville,TN,South,45.1,80.3,63.7
+Detroit,MI,Midwest,37.8,74.2,56.9
+Oklahoma City,OK,South,44.2,84.1,67.8
+Portland,OR,West,41.5,69.7,55.6
+Las Vegas,NV,West,53.7,101.2,82.4
+Memphis,TN,South,47.6,81.9,66.2
+Louisville,KY,South,42.3,78.7,61.5
+Baltimore,MD,South,43.1,76.9,60.8
+Milwaukee,WI,Midwest,35.9,71.3,54.6
+Albuquerque,NM,West,41.7,85.4,66.8
+Tucson,AZ,West,52.8,99.7,81.2
+Fresno,CA,West,44.6,87.9,69.7
+Sacramento,CA,West,43.2,82.1,65.4
+Kansas City,MO,Midwest,40.8,79.6,62.1
+Mesa,AZ,West,55.1,103.4,84.7
+Atlanta,GA,South,49.2,82.5,67.9
+Omaha,NE,Midwest,37.4,77.8,58.6
+Colorado Springs,CO,West,33.1,76.4,56.2
+Raleigh,NC,South,44.9,78.3,63.1
+Miami,FL,South,68.4,89.1,79.8
+Long Beach,CA,West,56.2,83.7,71.1
+Virginia Beach,VA,South,47.8,78.9,64.3
+Oakland,CA,West,48.7,75.6,62.9
+Minneapolis,MN,Midwest,32.1,73.2,53.7
+Tampa,FL,South,59.3,86.4,74.8
+Tulsa,OK,South,43.5,83.7,66.1
+Arlington,TX,South,51.2,89.4,75.3
+New Orleans,LA,South,55.7,85.9,72.8
+Wichita,KS,Midwest,39.6,82.1,63.4
+Cleveland,OH,Midwest,38.9,72.8,56.9
+Bakersfield,CA,West,46.8,89.3,71.2
+Aurora,CO,West,34.7,78.9,58.1
+Anaheim,CA,West,53.4,84.2,70.8
+Honolulu,HI,West,71.6,87.3,79.4
+Santa Ana,CA,West,54.1,85.7,72.3
+Corpus Christi,TX,South,58.9,88.6,75.2
+Riverside,CA,West,49.7,91.4,73.8
+Lexington,KY,South,41.8,77.9,61.2
+Stockton,CA,West,44.9,86.7,68.9
+Henderson,NV,West,52.1,99.8,81.3
+Saint Paul,MN,Midwest,31.4,72.6,52.9
+Cincinnati,OH,Midwest,40.7,75.3,58.8
+Pittsburgh,PA,Northeast,37.2,73.1,55.7
+Greensboro,NC,South,43.6,77.8,62.4
+Lincoln,NE,Midwest,35.8,79.4,59.1
+Anchorage,AK,West,18.7,62.3,41.8
+Plano,TX,South,50.3,88.7,74.1
+Orlando,FL,South,58.4,87.9,74.6
+Irvine,CA,West,52.8,82.6,69.7
+Newark,NJ,Northeast,42.1,76.4,59.8
+Durham,NC,South,45.2,79.1,63.7
+Chula Vista,CA,West,55.7,83.9,71.2
+Toledo,OH,Midwest,36.4,73.7,55.9
+Fort Wayne,IN,Midwest,37.1,74.8,56.4
+St. Petersburg,FL,South,61.2,86.7,75.1
+Laredo,TX,South,59.7,94.2,79.8
+Jersey City,NJ,Northeast,43.8,77.1,61.4
+Chandler,AZ,West,56.3,104.1,85.2
+Madison,WI,Midwest,33.6,72.9,54.2
+Lubbock,TX,South,42.1,86.3,67.9
+Scottsdale,AZ,West,57.8,105.2,86.4
+Reno,NV,West,34.2,81.7,59.8
+Buffalo,NY,Northeast,33.9,71.2,53.6
+Gilbert,AZ,West,55.9,103.7,84.8
+Glendale,AZ,West,56.1,104.3,85.1
+North Las Vegas,NV,West,51.8,100.4,81.7
+Winston-Salem,NC,South,42.7,78.2,62.1
+Chesapeake,VA,South,46.1,79.4,63.8
+Norfolk,VA,South,47.3,79.8,64.6
+Fremont,CA,West,47.9,79.2,64.5
+Garland,TX,South,49.8,88.1,73.7
+Irving,TX,South,50.1,88.4,74.2
+Hialeah,FL,South,67.2,88.3,78.9
+Richmond,VA,South,43.4,78.6,62.1
+Boise,ID,West,32.7,81.4,58.9
+Spokane,WA,West,29.8,76.2,54.1
+Birmingham,AL,South,46.8,82.1,66.4
+Rochester,NY,Northeast,34.7,72.8,54.2
+San Bernardino,CA,West,48.1,89.7,71.4
+Tacoma,WA,West,40.2,68.9,54.6
+Fontana,CA,West,49.3,90.1,72.8
+Modesto,CA,West,42.8,85.4,67.1
+Des Moines,IA,Midwest,36.2,78.1,58.7
+Moreno Valley,CA,West,48.7,91.8,73.2
+Fayetteville,NC,South,44.9,79.7,63.8
+Santa Clarita,CA,West,47.6,87.3,69.4
+Oxnard,CA,West,51.2,77.8,65.9

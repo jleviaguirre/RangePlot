@@ -8,7 +8,8 @@
         <link rel="stylesheet" type="text/css" media="all" href="main.css" />
     </head>
     <body>
-        <div id="mod-container"></div>
+        <div id="mod-container"><div id="plot-container"></div>
+</div>
         <script id="spotfire-loader">
             var Spotfire = (function (e) {
                 "use strict";
@@ -36,6 +37,7 @@
                 );
             })({});
         </script>
+        <script src="src/rangePlot.js"></script>
         <script src="build/main.js"></script>
     </body>
 </html>

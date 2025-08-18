@@ -55,12 +55,16 @@ function createRangePlot(data, mod, allRows) {
                 
                 <!-- Labels -->
                 <div class="labels">
-                    <div class="label" style="left: ${minPercent}%;">${item.min}</div>
-                    <div class="label" style="left: ${maxPercent}%;">${item.max}</div>
-                    <div class="value-label" style="left: ${valuePercent}%;">${item.value}</div>
+                    <div class="label" style="left: ${minPercent}%;">${item.minFormatted || item.min}</div>
+                    <div class="label" style="left: ${maxPercent}%;">${item.maxFormatted || item.max}</div>
+                    <div class="value-label" style="left: ${valuePercent}%;">${item.valueFormatted || item.value}</div>
                 </div>
             </div>
         `;
+
+        // Add data attributes for marking functionality
+        rowDiv.dataset.rowIndex = item.rowIndex !== undefined ? item.rowIndex : index;
+        rowDiv.dataset.category = item.category;
 
         container.appendChild(rowDiv);
         
@@ -137,6 +141,17 @@ function createRangePlot(data, mod, allRows) {
             }
         }
     });
+
+    // Initialize rectangular marking if mod is available
+    if (mod && allRows && window.initializeRectangleMarking) {
+        setTimeout(() => {
+            // Initialize rectangular marking after DOM elements are ready
+            window.initializeRectangleMarking((selectionData) => {
+                console.log('Selection event:', selectionData);
+                // TODO: Implement Spotfire marking API integration here
+            }, mod, allRows);
+        }, 100);
+    }
 }
 
 // Make functions available globally
@@ -150,3 +165,4 @@ window.updateRangePlot = function(jsonString, mod, allRows) {
         createRangePlot(data, mod, allRows);
     }
 };
+ 

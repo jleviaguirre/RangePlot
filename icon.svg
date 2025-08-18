@@ -1,1 +1,25 @@
-<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><defs><style>.cls-1{fill:#faa264;}</style></defs><title>Mods_icons</title><path class="cls-1" d="M24,15a3.141,3.141,0,0,1-3.15,3,2.757,2.757,0,0,1-2.445-1.5H18V24H10.5v-.405A2.757,2.757,0,0,0,12,21.15,3.141,3.141,0,0,0,9,18a3.141,3.141,0,0,0-3,3.15,2.757,2.757,0,0,0,1.5,2.445V24H0V6H7.5V5.595A2.757,2.757,0,0,1,6,3.15,3.141,3.141,0,0,1,9,0a3.141,3.141,0,0,1,3,3.15,2.757,2.757,0,0,1-1.5,2.445V6H18v7.5h.405A2.757,2.757,0,0,1,20.85,12,3.141,3.141,0,0,1,24,15Z"/></svg>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <style>
+      .cls-line{fill:none;stroke:#60a5fa;stroke-width:1.5;stroke-linecap:round;}
+      .cls-endpoint{fill:#2563eb;stroke:#1e3a8a;stroke-width:0.5;}
+      .cls-value{fill:#1d4ed8;stroke:#1e3a8a;stroke-width:0.5;}
+    </style>
+  </defs>
+  <title>Range Plot Icon</title>
+  
+  <!-- First range plot line - short, left-aligned -->
+  <line class="cls-line" x1="3" y1="5" x2="12" y2="5"/>
+  <circle class="cls-endpoint" cx="3" cy="5" r="2"/>
+  <circle class="cls-endpoint" cx="12" cy="5" r="2"/>
+  
+  <!-- Second range plot line - full width -->
+  <line class="cls-line" x1="3" y1="12" x2="21" y2="12"/>
+  <circle class="cls-endpoint" cx="3" cy="12" r="2"/>
+  <circle class="cls-endpoint" cx="21" cy="12" r="2"/>
+  
+  <!-- Third range plot line - short, right-aligned -->
+  <line class="cls-line" x1="12" y1="19" x2="21" y2="19"/>
+  <circle class="cls-endpoint" cx="12" cy="19" r="2"/>
+  <circle class="cls-endpoint" cx="21" cy="19" r="2"/>
+</svg>

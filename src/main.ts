@@ -16,6 +16,13 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
 
     async function render(dataView: Spotfire.DataView, windowSize: Spotfire.Size, prop: Spotfire.ModProperty<string>) {
         /**
+         * Set the current dataView for rectangular marking
+         */
+        if (typeof (window as any).setCurrentDataView === 'function') {
+            (window as any).setCurrentDataView(dataView);
+        }
+
+        /**
          * Check the data view for errors
          */
         let errors = await dataView.getErrors();
@@ -75,10 +82,15 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
                 const categoryValue = row.categorical("Range by");
                 const category = categoryValue.formattedValue();
                 
-                // Get the continuous values
+                // Get the continuous values - both raw (for calculations) and formatted (for display)
                 const minValue = row.continuous<number>("Min").value();
                 const maxValue = row.continuous<number>("Max").value();
                 const currentValue = row.continuous<number>("Value").value();
+                
+                // Get formatted values for display
+                const minFormatted = row.continuous("Min").formattedValue();
+                const maxFormatted = row.continuous("Max").formattedValue();
+                const currentFormatted = row.continuous("Value").formattedValue();
 
                 // Get the color from the color axis
                 const colorInfo = row.color();
@@ -88,9 +100,12 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
                 if (minValue !== null && maxValue !== null && currentValue !== null) {
                     plotData.data.push({
                         category: category,
-                        min: minValue,
+                        min: minValue,              // Raw values for calculations
                         max: maxValue,
                         value: currentValue,
+                        minFormatted: minFormatted, // Formatted values for display
+                        maxFormatted: maxFormatted,
+                        valueFormatted: currentFormatted,
                         color: hexColor,
                         rowIndex: i  // Store row index for tooltip access
                     });
@@ -119,6 +134,11 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
         if (plotData.data.length > 0) {
             // Pass mod and allRows for tooltip functionality
             (window as any).createRangePlot(plotData, mod, allRows);
+            
+            // Add click handlers for plot row marking
+            if (typeof (window as any).addPlotRowClickHandlers === 'function') {
+                (window as any).addPlotRowClickHandlers(mod, allRows);
+            }
         } else {
             renderSampleData();
         }
@@ -138,11 +158,11 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
                 "option1": "temperature",
                 "option2": "celsius",
                 "data": [
-                    {"min": 52, "max": 83.5, "value": 65.9, "category": "today", "color": "#ff6b6b", "rowIndex": 0},
-                    {"min": 55.8, "max": 83.5, "value": 69.1, "category": "yesterday", "color": "#4ecdc4", "rowIndex": 1},
-                    {"min": 52, "max": 88.5, "value": 70.4, "category": "week", "color": "#45b7d1", "rowIndex": 2},
-                    {"min": 38.5, "max": 88.5, "value": 65.9, "category": "month", "color": "#96ceb4", "rowIndex": 3},
-                    {"min": -0.8, "max": 88.5, "value": 42.1, "category": "year", "color": "#feca57", "rowIndex": 4}
+                    {"min": 52, "max": 83.5, "value": 65.9, "minFormatted": "52.0°", "maxFormatted": "83.5°", "valueFormatted": "65.9°", "category": "today", "color": "#ff6b6b", "rowIndex": 0},
+                    {"min": 55.8, "max": 83.5, "value": 69.1, "minFormatted": "55.8°", "maxFormatted": "83.5°", "valueFormatted": "69.1°", "category": "yesterday", "color": "#4ecdc4", "rowIndex": 1},
+                    {"min": 52, "max": 88.5, "value": 70.4, "minFormatted": "52.0°", "maxFormatted": "88.5°", "valueFormatted": "70.4°", "category": "week", "color": "#45b7d1", "rowIndex": 2},
+                    {"min": 38.5, "max": 88.5, "value": 65.9, "minFormatted": "38.5°", "maxFormatted": "88.5°", "valueFormatted": "65.9°", "category": "month", "color": "#96ceb4", "rowIndex": 3},
+                    {"min": -0.8, "max": 88.5, "value": 42.1, "minFormatted": "-0.8°", "maxFormatted": "88.5°", "valueFormatted": "42.1°", "category": "year", "color": "#feca57", "rowIndex": 4}
                 ]
             };
 

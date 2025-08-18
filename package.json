@@ -1,0 +1,22 @@
+{
+    "name": "my-visualization-mod",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "build": "mods-sdk build",
+        "build:dev": "mods-sdk build --watch --debug",
+        "tsc:dev": "tsc --watch",
+        "server": "mods-dev-server"
+    },
+    "devDependencies": {
+        "@spotfire/mods-api": "~1.3.0",
+        "@spotfire/mods-dev-server": "^1.2.0",
+        "@spotfire/mods-sdk": "^1.1.0",
+        "esbuild": "^0.25.1",
+        "prettier": "^3.3.0",
+        "typescript": "^5.8.2"
+    },
+    "engines": {
+        "node": ">=22.0.0"
+    }
+}

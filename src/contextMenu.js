@@ -10,7 +10,7 @@
  */
 
 // Debug flag for context menu logging
-isDebugging = false;
+isDebugging = true;
 
 let contextMenu = null;
 let settingsIcon = null;
@@ -73,9 +73,19 @@ const createSettingsIcon = () => {
     
     // Add click handler
     settingsIcon.addEventListener('click', (e) => {
+        console.log('⚙️ Settings icon clicked');
         e.stopPropagation();
+        e.preventDefault();
+        
+        // Check if we have marking before showing popout
+        if (typeof window.getSelectedRowIndices === 'function') {
+            const markedRows = window.getSelectedRowIndices();
+            console.log('⚙️ Current marked rows before popout:', Array.from(markedRows || []));
+        }
+        
         const rect = settingsIcon.getBoundingClientRect();
-        showContextMenu(rect.left, rect.bottom + 5);
+        // showContextMenu(rect.left, rect.bottom + 5);
+        showPopoutMenu(rect.left, rect.bottom + 5);
     });
     
     // Add hover handlers to show/hide settings icon
@@ -140,6 +150,7 @@ const addContextMenuStyles = () => {
             visibility: hidden;
             opacity: 0;
             transition: opacity 0.2s ease, visibility 0.2s ease, box-shadow 0.2s ease;
+            pointer-events: auto;
         }
         
         .range-plot-settings-icon:hover {
@@ -332,6 +343,158 @@ const showContextMenu = (x, y) => {
 };
 
 /**
+ * Show the Spotfire popout menu using Mods API
+ */
+const showPopoutMenu = (x, y) => {
+    if (!currentMod || !currentLabelProperty) {
+        isDebugging && console.warn('No mod or label property available for popout');
+        return;
+    }
+    
+    isDebugging && console.log('Showing Spotfire popout at coordinates:', x, y);
+    
+    // Get current settings directly from the Mod Property
+    const currentSettings = getLabelVisibilitySettings();
+    const isNoneMode = currentSettings.labelMode === 'none';
+    
+    console.log('🎯 Creating popout with settings:', currentSettings);
+    console.log('🎯 Is none mode:', isNoneMode);
+    
+    // Helper function to check property values (official pattern)
+    const is = (property, value) => property === value;
+    
+    // Get popout components
+    const { radioButton, checkbox } = currentMod.controls.popout.components;
+    const { section } = currentMod.controls.popout;
+    
+    // Create label visibility checkboxes
+    const minCheckbox = checkbox({ 
+        enabled: !isNoneMode, 
+        name: "min", 
+        text: "Show Min Labels", 
+        checked: Boolean(currentSettings.min)
+    });
+    
+    console.log('📦 Created minCheckbox with:', { enabled: !isNoneMode, checked: Boolean(currentSettings.min) });
+    
+    const maxCheckbox = checkbox({ 
+        enabled: !isNoneMode, 
+        name: "max", 
+        text: "Show Max Labels", 
+        checked: Boolean(currentSettings.max)
+    });
+    
+    console.log('📦 Created maxCheckbox with:', { enabled: !isNoneMode, checked: Boolean(currentSettings.max) });
+    
+    const valueCheckbox = checkbox({ 
+        enabled: !isNoneMode, 
+        name: "value", 
+        text: "Show Value Labels", 
+        checked: Boolean(currentSettings.value)
+    });
+    
+    console.log('📦 Created valueCheckbox with:', { enabled: !isNoneMode, checked: Boolean(currentSettings.value) });
+    
+    // Create label mode radio buttons
+    const allRadio = radioButton({ 
+        enabled: true, 
+        name: "labelMode", 
+        value: "all",
+        text: "All Rows", 
+        checked: is(currentSettings.labelMode, 'all') || !currentSettings.labelMode
+    });
+    
+    const markedRadio = radioButton({ 
+        enabled: true, 
+        name: "labelMode", 
+        value: "marked",
+        text: "Marked Rows Only", 
+        checked: is(currentSettings.labelMode, 'marked')
+    });
+    
+    const noneRadio = radioButton({ 
+        enabled: true, 
+        name: "labelMode", 
+        value: "none",
+        text: "None", 
+        checked: is(currentSettings.labelMode, 'none')
+    });
+    
+    // Show popout
+    currentMod.controls.popout.show({ 
+        x: x, 
+        y: y, 
+        autoClose: true,
+        alignment: "Bottom",
+        onChange: (e) => {
+            console.log('🔄 Popout onChange triggered with event:', e);
+            console.log('🔄 Event details - name:', e.name, 'value:', e.value, 'checked:', e.checked);
+            
+            // Get fresh settings from Mod Property for each change
+            const freshSettings = getLabelVisibilitySettings();
+            console.log('🔄 Fresh settings from Mod Property:', freshSettings);
+            
+            // Handle radio button changes for label mode
+            if (e.name === "labelMode" && e.value) {
+                console.log('📻 Handling radio button change to:', e.value);
+                freshSettings.labelMode = e.value;
+                
+                // If switching to none mode, clear all checkboxes
+                if (e.value === 'none') {
+                    console.log('❌ Clearing all checkboxes due to none mode');
+                    freshSettings.min = false;
+                    freshSettings.max = false;
+                    freshSettings.value = false;
+                }
+                
+                // Save to Mod Property immediately
+                saveLabelVisibilitySettings(freshSettings);
+                updateLabelVisibility(freshSettings);
+            }
+            // Handle checkbox changes - use e.value instead of e.checked
+            else if (e.name === "min") {
+                console.log('☑️ Handling min checkbox change - e.checked:', e.checked, 'e.value:', e.value);
+                freshSettings.min = Boolean(e.value);
+                console.log('☑️ About to save settings:', freshSettings);
+                saveLabelVisibilitySettings(freshSettings);
+                console.log('☑️ About to update label visibility');
+                updateLabelVisibility(freshSettings);
+                console.log('☑️ Finished handling min checkbox');
+            }
+            else if (e.name === "max") {
+                console.log('☑️ Handling max checkbox change - e.checked:', e.checked, 'e.value:', e.value);
+                freshSettings.max = Boolean(e.value);
+                console.log('☑️ About to save settings:', freshSettings);
+                saveLabelVisibilitySettings(freshSettings);
+                console.log('☑️ About to update label visibility');
+                updateLabelVisibility(freshSettings);
+                console.log('☑️ Finished handling max checkbox');
+            }
+            else if (e.name === "value") {
+                console.log('☑️ Handling value checkbox change - e.checked:', e.checked, 'e.value:', e.value);
+                freshSettings.value = Boolean(e.value);
+                console.log('☑️ About to save settings:', freshSettings);
+                saveLabelVisibilitySettings(freshSettings);
+                console.log('☑️ About to update label visibility');
+                updateLabelVisibility(freshSettings);
+                console.log('☑️ Finished handling value checkbox');
+            }
+        },
+        onClosed: () => {
+            isDebugging && console.log('Popout closed');
+        }
+    }, () => [
+        section({ 
+            heading: "Label Visibility", 
+            children: [minCheckbox, maxCheckbox, valueCheckbox] 
+        }),
+        section({ 
+            heading: "Show Labels For", 
+            children: [allRadio, markedRadio, noneRadio] 
+        })
+    ]);
+};
+/**
  * Hide the context menu
  */
 const hideContextMenu = () => {
@@ -386,20 +549,33 @@ const handleContextMenuClick = (e) => {
  */
 const getLabelVisibilitySettings = () => {
     if (!currentLabelProperty) {
-        return { min: true, max: true, value: true, labelMode: 'all' };
+        console.warn('🔴 No label property available, returning defaults');
+        return { min: true, max: true, value: true, labelMode: 'marked' };
     }
     
     try {
         const settingsJson = currentLabelProperty.value();
+        console.log('🔍 Raw settings JSON from Mod Property:', settingsJson);
+        
         const settings = JSON.parse(settingsJson);
-        // Ensure labelMode has a default value
-        if (!settings.labelMode) {
-            settings.labelMode = 'all';
+        console.log('🔍 Parsed settings object:', settings);
+        
+        // Ensure all properties have default values
+        const defaultSettings = { min: true, max: true, value: true, labelMode: 'marked' };
+        const mergedSettings = { ...defaultSettings, ...settings };
+        
+        console.log('🔍 Merged settings with defaults:', mergedSettings);
+        
+        // Ensure labelMode has a valid value
+        if (!mergedSettings.labelMode || !['all', 'marked', 'none'].includes(mergedSettings.labelMode)) {
+            mergedSettings.labelMode = 'marked';
         }
-        return settings;
+        
+        console.log('🔍 Final settings being returned:', mergedSettings);
+        return mergedSettings;
     } catch (error) {
-        isDebugging && console.warn('Failed to parse label visibility settings:', error);
-        return { min: true, max: true, value: true, labelMode: 'all' };
+        console.error('🔴 Failed to parse label visibility settings:', error);
+        return { min: true, max: true, value: true, labelMode: 'marked' };
     }
 };
 
@@ -408,16 +584,24 @@ const getLabelVisibilitySettings = () => {
  */
 const saveLabelVisibilitySettings = (settings) => {
     if (!currentLabelProperty) {
-        isDebugging && console.warn('No label property available to save settings');
+        console.warn('🔴 No label property available to save settings');
         return;
     }
     
     try {
+        console.log('💾 Attempting to save settings:', settings);
         const settingsJson = JSON.stringify(settings);
+        console.log('💾 Settings JSON to save:', settingsJson);
+        
         currentLabelProperty.set(settingsJson);
-        isDebugging && console.log('Saved label visibility settings:', settings);
+        console.log('✅ Successfully saved settings to Mod Property');
+        
+        // Verify the save by reading it back
+        const readBack = currentLabelProperty.value();
+        console.log('🔍 Read back from Mod Property:', readBack);
+        
     } catch (error) {
-        console.error('Failed to save label visibility settings:', error);
+        console.error('🔴 Failed to save label visibility settings:', error);
     }
 };
 
@@ -425,10 +609,21 @@ const saveLabelVisibilitySettings = (settings) => {
  * Update label visibility in the DOM based on settings
  */
 const updateLabelVisibility = (settings) => {
-    // Get currently marked/selected row indices
-    const selectedRowIndices = (typeof window.getSelectedRowIndices === 'function') 
-        ? window.getSelectedRowIndices() 
-        : new Set();
+    console.log('🔄 updateLabelVisibility called with settings:', settings);
+    
+    // Get currently marked/selected row indices - avoid interfering with existing marking
+    let selectedRowIndices = new Set();
+    
+    // Try to get marking state safely
+    try {
+        if (typeof window.getSelectedRowIndices === 'function') {
+            selectedRowIndices = window.getSelectedRowIndices() || new Set();
+        }
+    } catch (error) {
+        isDebugging && console.warn('Could not get selected row indices:', error);
+    }
+    
+    console.log('🔄 Selected row indices:', Array.from(selectedRowIndices));
     
     // Determine which rows should show labels based on labelMode
     let shouldShowLabelsForRow = (rowIndex) => {
@@ -442,7 +637,9 @@ const updateLabelVisibility = (settings) => {
     };
     
     // Hide/show min labels
-    document.querySelectorAll('[data-label-type="min"]').forEach(label => {
+    const minLabels = document.querySelectorAll('[data-label-type="min"]');
+    console.log('🔄 Found', minLabels.length, 'min labels');
+    minLabels.forEach(label => {
         const plotRow = label.closest('.plot-row');
         const rowIndex = plotRow ? parseInt(plotRow.getAttribute('data-row-index')) : -1;
         const shouldShow = settings.min && shouldShowLabelsForRow(rowIndex);
@@ -450,7 +647,9 @@ const updateLabelVisibility = (settings) => {
     });
     
     // Hide/show max labels
-    document.querySelectorAll('[data-label-type="max"]').forEach(label => {
+    const maxLabels = document.querySelectorAll('[data-label-type="max"]');
+    console.log('🔄 Found', maxLabels.length, 'max labels');
+    maxLabels.forEach(label => {
         const plotRow = label.closest('.plot-row');
         const rowIndex = plotRow ? parseInt(plotRow.getAttribute('data-row-index')) : -1;
         const shouldShow = settings.max && shouldShowLabelsForRow(rowIndex);
@@ -458,14 +657,16 @@ const updateLabelVisibility = (settings) => {
     });
     
     // Hide/show value labels
-    document.querySelectorAll('[data-label-type="value"]').forEach(label => {
+    const valueLabels = document.querySelectorAll('[data-label-type="value"]');
+    console.log('🔄 Found', valueLabels.length, 'value labels');
+    valueLabels.forEach(label => {
         const plotRow = label.closest('.plot-row');
         const rowIndex = plotRow ? parseInt(plotRow.getAttribute('data-row-index')) : -1;
         const shouldShow = settings.value && shouldShowLabelsForRow(rowIndex);
         label.style.display = shouldShow ? 'block' : 'none';
     });
     
-    isDebugging && console.log('Updated label visibility:', settings, 'Selected rows:', Array.from(selectedRowIndices));
+    console.log('🔄 Finished updating label visibility');
 };
 
 /**
@@ -480,14 +681,23 @@ const applyLabelVisibility = () => {
  * Apply label visibility with specific marking state (called from main.ts)
  */
 const applyLabelVisibilityWithMarking = (markedRowIndices) => {
+    console.log('🔄 applyLabelVisibilityWithMarking called with marked indices:', Array.from(markedRowIndices));
+    
     const settings = getLabelVisibilitySettings();
+    console.log('🔄 applyLabelVisibilityWithMarking using settings:', settings);
+    
     updateLabelVisibilityWithMarking(settings, markedRowIndices);
+    
+    console.log('🔄 applyLabelVisibilityWithMarking completed');
 };
 
 /**
  * Update label visibility with specific marking state
  */
 const updateLabelVisibilityWithMarking = (settings, markedRowIndices) => {
+    console.log('🔄 updateLabelVisibilityWithMarking called with settings:', settings);
+    console.log('🔄 updateLabelVisibilityWithMarking marked indices:', Array.from(markedRowIndices || []));
+    
     // Use the provided marking state instead of getting it from rectangleSelection
     const selectedRowIndices = markedRowIndices || new Set();
     
@@ -503,7 +713,9 @@ const updateLabelVisibilityWithMarking = (settings, markedRowIndices) => {
     };
     
     // Hide/show min labels
-    document.querySelectorAll('[data-label-type="min"]').forEach(label => {
+    const minLabels = document.querySelectorAll('[data-label-type="min"]');
+    console.log('🔄 updateLabelVisibilityWithMarking found', minLabels.length, 'min labels');
+    minLabels.forEach(label => {
         const plotRow = label.closest('.plot-row');
         const rowIndex = plotRow ? parseInt(plotRow.getAttribute('data-row-index')) : -1;
         const shouldShow = settings.min && shouldShowLabelsForRow(rowIndex);
@@ -511,7 +723,9 @@ const updateLabelVisibilityWithMarking = (settings, markedRowIndices) => {
     });
     
     // Hide/show max labels
-    document.querySelectorAll('[data-label-type="max"]').forEach(label => {
+    const maxLabels = document.querySelectorAll('[data-label-type="max"]');
+    console.log('🔄 updateLabelVisibilityWithMarking found', maxLabels.length, 'max labels');
+    maxLabels.forEach(label => {
         const plotRow = label.closest('.plot-row');
         const rowIndex = plotRow ? parseInt(plotRow.getAttribute('data-row-index')) : -1;
         const shouldShow = settings.max && shouldShowLabelsForRow(rowIndex);
@@ -519,14 +733,16 @@ const updateLabelVisibilityWithMarking = (settings, markedRowIndices) => {
     });
     
     // Hide/show value labels
-    document.querySelectorAll('[data-label-type="value"]').forEach(label => {
+    const valueLabels = document.querySelectorAll('[data-label-type="value"]');
+    console.log('🔄 updateLabelVisibilityWithMarking found', valueLabels.length, 'value labels');
+    valueLabels.forEach(label => {
         const plotRow = label.closest('.plot-row');
         const rowIndex = plotRow ? parseInt(plotRow.getAttribute('data-row-index')) : -1;
         const shouldShow = settings.value && shouldShowLabelsForRow(rowIndex);
         label.style.display = shouldShow ? 'block' : 'none';
     });
     
-    isDebugging && console.log('Updated label visibility with marking:', settings, 'Marked rows:', Array.from(selectedRowIndices));
+    console.log('🔄 updateLabelVisibilityWithMarking completed');
 };
 
 /**
@@ -559,6 +775,46 @@ const testContextMenu = () => {
     showContextMenu(100, 100);
 };
 
+/**
+ * Debug function to inspect current state
+ */
+const debugCurrentState = () => {
+    console.log('🔍 === DEBUG CURRENT STATE ===');
+    console.log('🔍 currentMod:', !!currentMod);
+    console.log('🔍 currentLabelProperty:', !!currentLabelProperty);
+    
+    if (currentLabelProperty) {
+        try {
+            const raw = currentLabelProperty.value();
+            console.log('🔍 Raw Mod Property value:', raw);
+            const parsed = JSON.parse(raw);
+            console.log('🔍 Parsed Mod Property:', parsed);
+        } catch (e) {
+            console.error('🔍 Error reading Mod Property:', e);
+        }
+    }
+    
+    const settings = getLabelVisibilitySettings();
+    console.log('🔍 getLabelVisibilitySettings() returns:', settings);
+    
+    if (typeof window.getSelectedRowIndices === 'function') {
+        const marked = window.getSelectedRowIndices();
+        console.log('🔍 Currently marked rows:', Array.from(marked || []));
+    }
+    
+    console.log('🔍 === END DEBUG ===');
+};
+
+/**
+ * Test function to manually set settings
+ */
+const testSetSettings = (testSettings) => {
+    console.log('🧪 Testing setting:', testSettings);
+    saveLabelVisibilitySettings(testSettings);
+    const readBack = getLabelVisibilitySettings();
+    console.log('🧪 Read back:', readBack);
+};
+
 // Export functions
 window.initializeContextMenu = initializeContextMenu;
 window.updateSettingsIconPosition = updateSettingsIconPosition;
@@ -566,3 +822,5 @@ window.applyLabelVisibility = applyLabelVisibility;
 window.applyLabelVisibilityWithMarking = applyLabelVisibilityWithMarking;
 window.cleanupContextMenu = cleanupContextMenu;
 window.testContextMenu = testContextMenu; // For debugging
+window.debugCurrentState = debugCurrentState; // For debugging
+window.testSetSettings = testSetSettings; // For debugging

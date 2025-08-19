@@ -14,7 +14,7 @@
         {
             "name": "labelVisibility",
             "type": "string",
-            "defaultValue": "{\"min\":true,\"max\":true,\"value\":true}"
+            "defaultValue": "{\"min\":true,\"max\":true,\"value\":true,\"labelMode\":\"marked\"}"
         }
     ],
     "dataViewDefinition": {

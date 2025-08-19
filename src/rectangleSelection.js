@@ -260,7 +260,7 @@ const mouseup = (e, mod, allRows) => {
                 if (currentDataView && typeof currentDataView.clearMarking === 'function') {
                     try {
                         currentDataView.clearMarking();
-                        console.log('Cleared Spotfire marking');
+                        isDebugging && console.log('Cleared Spotfire marking');
                         
                         // Clear persistent selection state and update label visibility
                         persistentSelectedRowIndices.clear();
@@ -268,7 +268,7 @@ const mouseup = (e, mod, allRows) => {
                             window.applyLabelVisibility();
                         }
                     } catch (error) {
-                        console.error('Failed to clear Spotfire marking:', error);
+                        isDebugging && console.error('Failed to clear Spotfire marking:', error);
                     }
                 } else {
                     console.warn('No valid dataView available for clearing marking');

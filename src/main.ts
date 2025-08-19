@@ -1,3 +1,13 @@
+// Set global debugging flag - controls all debug output across all files
+(window as any).RANGEPLOT_DEBUG_MODE = false;
+
+// Helper function for conditional logging (using global flag)
+const debugLog = (...args: any[]) => {
+    if ((window as any).RANGEPLOT_DEBUG_MODE) {
+        console.log('[RangePlot Debug]:', ...args);
+    }
+};
+
 Spotfire.initialize(async (mod: Spotfire.Mod) => {
     /**
      * Create the read function.
@@ -43,22 +53,23 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
         const rangeByHierarchy = await dataView.hierarchy("Range by");
         const minAxis = await dataView.continuousAxis("Min");
         const maxAxis = await dataView.continuousAxis("Max");
-        const valueAxis = await dataView.continuousAxis("Value");
+        const valueAxis = await dataView.continuousAxis("Value"); // Optional
 
-        // Check if we have the required data
-        if (!rangeByHierarchy || !minAxis || !maxAxis || !valueAxis) {
-            // No data configured
-            console.log("Missing required data");
-            context.signalRenderComplete();
+        // Check if we have the required data (only Min and Max are required now)
+        if (!minAxis || !maxAxis) {
+            // Show error overlay for missing required axes
+            const missingAxes = [];
+            if (!minAxis) missingAxes.push("Min");
+            if (!maxAxis) missingAxes.push("Max");
+            
+            mod.controls.errorOverlay.show(
+                `Range Plot requires the following axes to be configured: ${missingAxes.join(", ")}`
+            );
             return;
         }
 
-        const rangeByRoot = await rangeByHierarchy.root();
-        if (!rangeByRoot) {
-            console.log("No range by root data");
-            context.signalRenderComplete();
-            return;
-        }
+        // Check if we have category data (optional now)
+        const rangeByRoot = rangeByHierarchy ? await rangeByHierarchy.root() : null;
 
         /**
          * Transform Spotfire data to our format
@@ -73,50 +84,105 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
         const allRows = await dataView.allRows();
         
         if (!allRows || allRows.length === 0) {
-            console.log("No data rows available");
+            debugLog("No data rows available");
             context.signalRenderComplete();
             return;
         }
         
-        for (let i = 0; i < allRows.length; i++) {
-            const row = allRows[i];
-            
-            try {
-                // Get the category name from the categorical axis
-                const categoryValue = row.categorical("Range by");
-                const category = categoryValue.formattedValue();
+        if (rangeByHierarchy) {
+            // Process data with categories (original behavior)
+            for (let i = 0; i < allRows.length; i++) {
+                const row = allRows[i];
                 
-                // Get the continuous values - both raw (for calculations) and formatted (for display)
-                const minValue = row.continuous<number>("Min").value();
-                const maxValue = row.continuous<number>("Max").value();
-                const currentValue = row.continuous<number>("Value").value();
-                
-                // Get formatted values for display
-                const minFormatted = row.continuous("Min").formattedValue();
-                const maxFormatted = row.continuous("Max").formattedValue();
-                const currentFormatted = row.continuous("Value").formattedValue();
+                try {
+                    // Get the category name from the categorical axis
+                    const categoryValue = row.categorical("Range by");
+                    const category = categoryValue.formattedValue();
+                    
+                    // Get the continuous values - both raw (for calculations) and formatted (for display)
+                    const minValue = row.continuous<number>("Min").value();
+                    const maxValue = row.continuous<number>("Max").value();
+                    
+                    // Value is optional - only get if valueAxis exists
+                    const currentValue = valueAxis ? row.continuous<number>("Value").value() : null;
+                    
+                    // Get formatted values for display
+                    const minFormatted = row.continuous("Min").formattedValue();
+                    const maxFormatted = row.continuous("Max").formattedValue();
+                    const currentFormatted = valueAxis ? row.continuous("Value").formattedValue() : null;
 
-                // Get the color from the color axis
-                const colorInfo = row.color();
-                const hexColor = colorInfo ? colorInfo.hexCode : "#0ba5e0"; // Default blue if no color
+                    // Get the color from the color axis
+                    const colorInfo = row.color();
+                    const hexColor = colorInfo ? colorInfo.hexCode : "#0ba5e0"; // Default blue if no color
 
-                // Only add if we have valid values
-                if (minValue !== null && maxValue !== null && currentValue !== null) {
-                    plotData.data.push({
-                        category: category,
-                        min: minValue,              // Raw values for calculations
-                        max: maxValue,
-                        value: currentValue,
-                        minFormatted: minFormatted, // Formatted values for display
-                        maxFormatted: maxFormatted,
-                        valueFormatted: currentFormatted,
-                        color: hexColor,
-                        rowIndex: i  // Store row index for tooltip access
-                    });
+                    // Only add if we have valid min and max values (value is optional)
+                    if (minValue !== null && maxValue !== null) {
+                        plotData.data.push({
+                            category: category,
+                            min: minValue,              // Raw values for calculations
+                            max: maxValue,
+                            value: currentValue,        // Can be null
+                            minFormatted: minFormatted, // Formatted values for display
+                            maxFormatted: maxFormatted,
+                            valueFormatted: currentFormatted, // Can be null
+                            color: hexColor,
+                            rowIndex: i  // Store row index for tooltip access
+                        });
+                    }
+                } catch (error) {
+                    debugLog("Error processing categorized row", i, error);
+                    continue;
                 }
-            } catch (error) {
-                console.warn("Error processing row", i, error);
-                continue;
+            }
+        } else {
+            // No categorical axis - aggregate all data into a single row
+            const minValues: number[] = [];
+            const maxValues: number[] = [];
+            const valueValues: number[] = [];
+            
+            for (let i = 0; i < allRows.length; i++) {
+                const row = allRows[i];
+                
+                try {
+                    const minValue = row.continuous<number>("Min").value();
+                    const maxValue = row.continuous<number>("Max").value();
+                    const currentValue = valueAxis ? row.continuous<number>("Value").value() : null;
+                    
+                    if (minValue !== null && maxValue !== null) {
+                        minValues.push(minValue);
+                        maxValues.push(maxValue);
+                        if (currentValue !== null) {
+                            valueValues.push(currentValue);
+                        }
+                    }
+                } catch (error) {
+                    debugLog("Error processing aggregated row", i, error);
+                    continue;
+                }
+            }
+            
+            if (minValues.length > 0 && maxValues.length > 0) {
+                // Calculate aggregated values
+                const aggregatedMin = Math.min(...minValues);
+                const aggregatedMax = Math.max(...maxValues);
+                const aggregatedValue = valueValues.length > 0 ? valueValues.reduce((a, b) => a + b) / valueValues.length : null;
+                
+                // Use simple number formatting for aggregated values
+                const minFormatted = aggregatedMin.toString();
+                const maxFormatted = aggregatedMax.toString();
+                const valueFormatted = aggregatedValue !== null ? aggregatedValue.toString() : null;
+                
+                plotData.data.push({
+                    category: "Data",
+                    min: aggregatedMin,
+                    max: aggregatedMax,
+                    value: aggregatedValue,
+                    minFormatted: minFormatted,
+                    maxFormatted: maxFormatted,
+                    valueFormatted: valueFormatted,
+                    color: "#0ba5e0", // Default blue color
+                    rowIndex: 0  // Single aggregated row
+                });
             }
         }
 
@@ -146,12 +212,26 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
             
             // Initialize context menu for label visibility (only in edit mode)
             if (typeof (window as any).initializeContextMenu === 'function') {
-                (window as any).initializeContextMenu(mod, labelVisibility);
+                (window as any).initializeContextMenu(mod, labelVisibility, !!valueAxis);
             }
             
-            // Apply label visibility settings
+            // Apply label visibility settings with current marking state
             if (typeof (window as any).applyLabelVisibility === 'function') {
-                (window as any).applyLabelVisibility();
+                // Get current marked rows from Spotfire
+                const markedRows = new Set();
+                try {
+                    for (let i = 0; i < allRows.length; i++) {
+                        const row = allRows[i];
+                        const isMarked = row.isMarked();
+                        if (isMarked) {
+                            markedRows.add(i);
+                        }
+                    }
+                } catch (error) {
+                    debugLog("Error getting marking state:", error);
+                }
+                
+                (window as any).applyLabelVisibilityWithMarking(markedRows);
             }
             
             // Update settings icon position
@@ -159,7 +239,7 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
                 (window as any).updateSettingsIconPosition();
             }
         } else {
-            console.log("No valid data to render");
+            debugLog("No valid data to render");
         }
 
         /**

@@ -9,6 +9,9 @@
  * Uses a settings icon instead of right-click to avoid conflicts
  */
 
+// Debug flag for context menu logging
+isDebugging = false;
+
 let contextMenu = null;
 let settingsIcon = null;
 let currentMod = null;
@@ -17,7 +20,8 @@ let currentLabelProperty = null;
 /**
  * Initialize context menu functionality with settings icon
  */
-const initializeContextMenu = (mod, labelProperty) => {
+const initializeContextMenu = (mod, labelProperty, hasValueAxis) => {
+    isDebugging && console.log('Initializing context menu...', mod, labelProperty, hasValueAxis);
     currentMod = mod;
     currentLabelProperty = labelProperty;
     
@@ -45,12 +49,15 @@ const initializeContextMenu = (mod, labelProperty) => {
     
     document.body.appendChild(contextMenu);
     document.body.appendChild(settingsIcon);
+    
+    isDebugging && console.log('Context menu initialized. Settings icon should be visible at:', settingsIcon.style.left, settingsIcon.style.top);
 };
 
 /**
  * Create the settings icon
  */
 const createSettingsIcon = () => {
+    isDebugging && console.log('Creating settings icon...');
     settingsIcon = document.createElement('div');
     settingsIcon.className = 'range-plot-settings-icon';
     settingsIcon.title = 'Label Settings';
@@ -71,8 +78,10 @@ const createSettingsIcon = () => {
         showContextMenu(rect.left, rect.bottom + 5);
     });
     
-    // Add hover handlers to the mod container to show/hide settings icon
+    // Add hover handlers to show/hide settings icon
     setupHoverHandlers();
+    
+    isDebugging && console.log('Settings icon created and positioned');
 };
 
 /**
@@ -129,6 +138,7 @@ const addContextMenuStyles = () => {
             cursor: pointer;
             z-index: 9999;
             visibility: hidden;
+            opacity: 0;
             transition: opacity 0.2s ease, visibility 0.2s ease, box-shadow 0.2s ease;
         }
         
@@ -260,11 +270,11 @@ const updateSettingsIconPosition = () => {
  */
 const showContextMenu = (x, y) => {
     if (!currentLabelProperty) {
-        console.warn('No label property available for context menu');
+        isDebugging && console.warn('No label property available for context menu');
         return;
     }
     
-    console.log('Showing label settings menu');
+    isDebugging && console.log('Showing label settings menu');
     
     // Get current label visibility settings
     const currentSettings = getLabelVisibilitySettings();
@@ -388,7 +398,7 @@ const getLabelVisibilitySettings = () => {
         }
         return settings;
     } catch (error) {
-        console.warn('Failed to parse label visibility settings:', error);
+        isDebugging && console.warn('Failed to parse label visibility settings:', error);
         return { min: true, max: true, value: true, labelMode: 'all' };
     }
 };
@@ -398,14 +408,14 @@ const getLabelVisibilitySettings = () => {
  */
 const saveLabelVisibilitySettings = (settings) => {
     if (!currentLabelProperty) {
-        console.warn('No label property available to save settings');
+        isDebugging && console.warn('No label property available to save settings');
         return;
     }
     
     try {
         const settingsJson = JSON.stringify(settings);
         currentLabelProperty.set(settingsJson);
-        console.log('Saved label visibility settings:', settings);
+        isDebugging && console.log('Saved label visibility settings:', settings);
     } catch (error) {
         console.error('Failed to save label visibility settings:', error);
     }
@@ -455,7 +465,7 @@ const updateLabelVisibility = (settings) => {
         label.style.display = shouldShow ? 'block' : 'none';
     });
     
-    console.log('Updated label visibility:', settings, 'Selected rows:', Array.from(selectedRowIndices));
+    isDebugging && console.log('Updated label visibility:', settings, 'Selected rows:', Array.from(selectedRowIndices));
 };
 
 /**
@@ -464,6 +474,59 @@ const updateLabelVisibility = (settings) => {
 const applyLabelVisibility = () => {
     const settings = getLabelVisibilitySettings();
     updateLabelVisibility(settings);
+};
+
+/**
+ * Apply label visibility with specific marking state (called from main.ts)
+ */
+const applyLabelVisibilityWithMarking = (markedRowIndices) => {
+    const settings = getLabelVisibilitySettings();
+    updateLabelVisibilityWithMarking(settings, markedRowIndices);
+};
+
+/**
+ * Update label visibility with specific marking state
+ */
+const updateLabelVisibilityWithMarking = (settings, markedRowIndices) => {
+    // Use the provided marking state instead of getting it from rectangleSelection
+    const selectedRowIndices = markedRowIndices || new Set();
+    
+    // Determine which rows should show labels based on labelMode
+    let shouldShowLabelsForRow = (rowIndex) => {
+        if (settings.labelMode === 'none') {
+            return false;
+        } else if (settings.labelMode === 'marked') {
+            return selectedRowIndices.has(rowIndex);
+        } else { // 'all' mode
+            return true;
+        }
+    };
+    
+    // Hide/show min labels
+    document.querySelectorAll('[data-label-type="min"]').forEach(label => {
+        const plotRow = label.closest('.plot-row');
+        const rowIndex = plotRow ? parseInt(plotRow.getAttribute('data-row-index')) : -1;
+        const shouldShow = settings.min && shouldShowLabelsForRow(rowIndex);
+        label.style.display = shouldShow ? 'block' : 'none';
+    });
+    
+    // Hide/show max labels
+    document.querySelectorAll('[data-label-type="max"]').forEach(label => {
+        const plotRow = label.closest('.plot-row');
+        const rowIndex = plotRow ? parseInt(plotRow.getAttribute('data-row-index')) : -1;
+        const shouldShow = settings.max && shouldShowLabelsForRow(rowIndex);
+        label.style.display = shouldShow ? 'block' : 'none';
+    });
+    
+    // Hide/show value labels
+    document.querySelectorAll('[data-label-type="value"]').forEach(label => {
+        const plotRow = label.closest('.plot-row');
+        const rowIndex = plotRow ? parseInt(plotRow.getAttribute('data-row-index')) : -1;
+        const shouldShow = settings.value && shouldShowLabelsForRow(rowIndex);
+        label.style.display = shouldShow ? 'block' : 'none';
+    });
+    
+    isDebugging && console.log('Updated label visibility with marking:', settings, 'Marked rows:', Array.from(selectedRowIndices));
 };
 
 /**
@@ -492,7 +555,7 @@ const cleanupContextMenu = () => {
  * Test function to manually show context menu (for debugging)
  */
 const testContextMenu = () => {
-    console.log('Testing context menu...');
+    isDebugging && console.log('Testing context menu...');
     showContextMenu(100, 100);
 };
 
@@ -500,5 +563,6 @@ const testContextMenu = () => {
 window.initializeContextMenu = initializeContextMenu;
 window.updateSettingsIconPosition = updateSettingsIconPosition;
 window.applyLabelVisibility = applyLabelVisibility;
+window.applyLabelVisibilityWithMarking = applyLabelVisibilityWithMarking;
 window.cleanupContextMenu = cleanupContextMenu;
 window.testContextMenu = testContextMenu; // For debugging

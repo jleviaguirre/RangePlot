@@ -9,6 +9,9 @@
  * Allows users to select range segments by dragging a rectangle or clicking individual elements
  */
 
+// Debug flag for rectangle selection logging
+isDebugging = false;
+
 // Global reference to current dataView for marking operations
 let currentDataView = null;
 
@@ -168,7 +171,7 @@ const mousemove = (e, mod, allRows) => {
     const minDragDistance = 5;
     if (!isDragging && (width > minDragDistance || height > minDragDistance)) {
         isDragging = true;
-        console.log('Started dragging - showing rectangle selection');
+        isDebugging && console.log('Started dragging - showing rectangle selection');
     }
     
     // Only show visual selection if we're actually dragging
@@ -200,7 +203,7 @@ const mouseup = (e, mod, allRows) => {
 
     // If we never started dragging (just a click), let the plot row click handler work
     if (!isDragging) {
-        console.log('Click detected (no drag) - checking what was clicked');
+        isDebugging && console.log('Click detected (no drag) - checking what was clicked');
         
         // Check if we clicked on a plot row
         const plotRowElement = dragStartElement.closest('.plot-row');
@@ -213,21 +216,29 @@ const mouseup = (e, mod, allRows) => {
         } else {
             // Clicked outside plot rows - clear marking unless using Ctrl
             if (!meta.ctrlKey) {
-                console.log('Clicked outside plot rows - clearing marking');
+                isDebugging && console.log('Clicked outside plot rows - clearing marking');
                 const currentDataView = getCurrentDataView();
-                if (currentDataView) {
+                if (currentDataView && typeof currentDataView.clearMarking === 'function') {
                     try {
                         currentDataView.clearMarking();
-                        console.log('Cleared Spotfire marking');
+                        isDebugging && console.log('Cleared Spotfire marking');
+                        
+                        // Clear persistent selection state and update label visibility
+                        persistentSelectedRowIndices.clear();
+                        if (typeof window.applyLabelVisibility === 'function') {
+                            window.applyLabelVisibility();
+                        }
                     } catch (error) {
                         console.error('Failed to clear Spotfire marking:', error);
                     }
+                } else {
+                    isDebugging && console.warn('No valid dataView available for clearing marking');
                 }
             }
         }
     } else {
         // We were dragging, so handle rectangular selection
-        console.log('Drag detected - processing rectangular selection');
+        isDebugging && console.log('Drag detected - processing rectangular selection');
         
         const minSelectionSize = 5;
         if (width > minSelectionSize && height > minSelectionSize) {
@@ -244,15 +255,23 @@ const mouseup = (e, mod, allRows) => {
         } else {
             // Small drag - treat as clearing unless using Ctrl
             if (!meta.ctrlKey) {
-                console.log('Small drag detected - clearing marking');
+                isDebugging && console.log('Small drag detected - clearing marking');
                 const currentDataView = getCurrentDataView();
-                if (currentDataView) {
+                if (currentDataView && typeof currentDataView.clearMarking === 'function') {
                     try {
                         currentDataView.clearMarking();
                         console.log('Cleared Spotfire marking');
+                        
+                        // Clear persistent selection state and update label visibility
+                        persistentSelectedRowIndices.clear();
+                        if (typeof window.applyLabelVisibility === 'function') {
+                            window.applyLabelVisibility();
+                        }
                     } catch (error) {
                         console.error('Failed to clear Spotfire marking:', error);
                     }
+                } else {
+                    console.warn('No valid dataView available for clearing marking');
                 }
             }
         }
@@ -323,7 +342,14 @@ const selectElementsInRectangle = (selectionRect, mod, allRows) => {
     
     // Clear previous selection if not using Ctrl
     if (!selectionRect.ctrlKey) {
-        clearSelection(mod);
+        // Only call clearSelection with mod if we have a valid dataView
+        const currentDataView = getCurrentDataView();
+        if (currentDataView && typeof currentDataView.clearMarking === 'function') {
+            clearSelection(mod);
+        } else {
+            // Just clear visual selection without calling Spotfire clearMarking
+            clearSelection(null);
+        }
         persistentSelectedRowIndices.clear();
     }
     
@@ -367,10 +393,10 @@ const selectElementsInRectangle = (selectionRect, mod, allRows) => {
     // Apply visual selection based on persistent state
     restoreVisualSelection();
 
-    console.log('Selected rows:', selectedRowIndices);
-    console.log('Persistent selection state:', Array.from(persistentSelectedRowIndices));
-    console.log('Elements to mark in Spotfire:', elementsToMark);
-    console.log('Spotfire rows to mark:', spotfireRowsToMark);
+    isDebugging && console.log('Selected rows:', selectedRowIndices);
+    isDebugging && console.log('Persistent selection state:', Array.from(persistentSelectedRowIndices));
+    isDebugging && console.log('Elements to mark in Spotfire:', elementsToMark);
+    isDebugging && console.log('Spotfire rows to mark:', spotfireRowsToMark);
     
     // Mark the rows in Spotfire's data table using persistent state
     if (mod && persistentSelectedRowIndices.size > 0) {
@@ -389,10 +415,15 @@ const selectElementsInRectangle = (selectionRect, mod, allRows) => {
                 if (rowsToMark.length > 0) {
                     // Always use Replace since we're managing the full selection state
                     currentDataView.mark(rowsToMark, "Replace");
-                    console.log('Successfully marked', rowsToMark.length, 'rows in Spotfire based on persistent state');
+                    isDebugging && console.log('Successfully marked', rowsToMark.length, 'rows in Spotfire based on persistent state');
+                    
+                    // Update label visibility after marking
+                    if (typeof window.applyLabelVisibility === 'function') {
+                        window.applyLabelVisibility();
+                    }
                 }
             } else {
-                console.warn('No dataView available for marking');
+                isDebugging && console.warn('No dataView available for marking');
             }
         } catch (error) {
             console.error('Failed to mark rows in Spotfire:', error);
@@ -401,9 +432,16 @@ const selectElementsInRectangle = (selectionRect, mod, allRows) => {
         // Clear marking if no rows selected
         try {
             const currentDataView = getCurrentDataView();
-            if (currentDataView) {
+            if (currentDataView && typeof currentDataView.clearMarking === 'function') {
                 currentDataView.clearMarking();
-                console.log('Cleared Spotfire marking - no persistent selection');
+                isDebugging && console.log('Cleared Spotfire marking - no persistent selection');
+                
+                // Update label visibility after clearing
+                if (typeof window.applyLabelVisibility === 'function') {
+                    window.applyLabelVisibility();
+                }
+            } else {
+                isDebugging && console.warn('No valid dataView available for clearing marking');
             }
         } catch (error) {
             console.error('Failed to clear Spotfire marking:', error);
@@ -427,12 +465,38 @@ const clearSelection = (mod = null) => {
     if (mod) {
         try {
             const currentDataView = getCurrentDataView();
-            if (currentDataView) {
-                currentDataView.clearMarking();
-                console.log('Cleared Spotfire marking');
+            if (currentDataView && typeof currentDataView.clearMarking === 'function') {
+                // Enhanced validation - check if dataView has required properties and methods
+                try {
+                    // Test if we can safely access allRows
+                    const hasValidData = currentDataView.allRows && 
+                                       typeof currentDataView.allRows === 'function' &&
+                                       currentDataView.allRows().length >= 0;
+                    
+                    if (hasValidData) {
+                        currentDataView.clearMarking();
+                        isDebugging && console.log('Cleared Spotfire marking');
+                        
+                        // Update label visibility after clearing
+                        if (typeof window.applyLabelVisibility === 'function') {
+                            window.applyLabelVisibility();
+                        }
+                    } else {
+                        isDebugging && console.warn('DataView exists but has no valid data - skipping clearMarking');
+                    }
+                } catch (dataError) {
+                    isDebugging && console.warn('DataView validation failed:', dataError.message);
+                }
+            } else {
+                isDebugging && console.warn('No valid dataView available for clearing marking');
             }
         } catch (error) {
-            console.error('Failed to clear Spotfire marking:', error);
+            // Catch both our errors and any API-level errors from Spotfire
+            if (error.message && error.message.includes('no valid data view')) {
+                console.warn('Spotfire API: No valid data view available for clearing marking');
+            } else {
+                console.error('Failed to clear Spotfire marking:', error);
+            }
         }
     }
 };
@@ -441,12 +505,12 @@ const clearSelection = (mod = null) => {
  * Handle direct plot row click (called from mouseup when no dragging occurred)
  */
 const handlePlotRowClickDirect = (rowIndex, ctrlPressed, mod, allRows) => {
-    console.log('Direct plot row click:', rowIndex, 'Ctrl pressed:', ctrlPressed);
+    isDebugging && console.log('Direct plot row click:', rowIndex, 'Ctrl pressed:', ctrlPressed);
     
     // Get the dataView for marking
     const currentDataView = getCurrentDataView();
     if (!currentDataView) {
-        console.warn('No dataView available for marking');
+        isDebugging && console.warn('No dataView available for marking');
         return;
     }
     
@@ -456,11 +520,16 @@ const handlePlotRowClickDirect = (rowIndex, ctrlPressed, mod, allRows) => {
         if (ctrlPressed) {
             // Ctrl+click: Add to existing marking
             currentDataView.mark([rowToMark], "ToggleOrAdd");
-            console.log('Added/toggled row in Spotfire marking:', rowIndex);
+            isDebugging && console.log('Added/toggled row in Spotfire marking:', rowIndex);
         } else {
             // Regular click: Replace marking with this row only
             currentDataView.mark([rowToMark], "Replace");
-            console.log('Replaced Spotfire marking with row:', rowIndex);
+            isDebugging && console.log('Replaced Spotfire marking with row:', rowIndex);
+        }
+        
+        // Update label visibility after marking change
+        if (typeof window.applyLabelVisibility === 'function') {
+            window.applyLabelVisibility();
         }
     } catch (error) {
         console.error('Failed to mark row in Spotfire:', error);
@@ -478,16 +547,16 @@ const handlePlotRowClick = (e, mod, allRows) => {
     const rowIndex = parseInt(plotRow.getAttribute('data-row-index'));
     
     if (isNaN(rowIndex) || !allRows || !allRows[rowIndex]) {
-        console.warn('Invalid row index for click marking:', rowIndex);
+        isDebugging && console.warn('Invalid row index for click marking:', rowIndex);
         return;
     }
     
-    console.log('Plot row clicked:', rowIndex, 'Ctrl pressed:', e.ctrlKey);
+    isDebugging && console.log('Plot row clicked:', rowIndex, 'Ctrl pressed:', e.ctrlKey);
     
     // Get the dataView for marking
     const currentDataView = getCurrentDataView();
     if (!currentDataView) {
-        console.warn('No dataView available for marking');
+        isDebugging && console.warn('No dataView available for marking');
         return;
     }
     
@@ -497,11 +566,11 @@ const handlePlotRowClick = (e, mod, allRows) => {
         if (e.ctrlKey) {
             // Ctrl+click: Add to existing marking
             currentDataView.mark([rowToMark], "ToggleOrAdd");
-            console.log('Added/toggled row in Spotfire marking:', rowIndex);
+            isDebugging && console.log('Added/toggled row in Spotfire marking:', rowIndex);
         } else {
             // Regular click: Replace marking with this row only
             currentDataView.mark([rowToMark], "Replace");
-            console.log('Replaced Spotfire marking with row:', rowIndex);
+            isDebugging && console.log('Replaced Spotfire marking with row:', rowIndex);
         }
     } catch (error) {
         console.error('Failed to mark row in Spotfire:', error);
@@ -518,7 +587,7 @@ const addPlotRowClickHandlers = (mod, allRows) => {
         plotRow.style.cursor = 'pointer';
     });
     
-    console.log('Configured', document.querySelectorAll('.plot-row').length, 'plot rows for click/drag marking');
+    isDebugging && console.log('Configured', document.querySelectorAll('.plot-row').length, 'plot rows for click/drag marking');
 };
 
 /**

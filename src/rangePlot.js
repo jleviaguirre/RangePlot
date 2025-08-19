@@ -1,3 +1,6 @@
+// Debug flag for range plot logging
+isDebugging = false;
+
 function parseRangePlotData(jsonString) {
     try {
         return JSON.parse(jsonString);
@@ -148,7 +151,7 @@ function createRangePlot(data, mod, allRows) {
         setTimeout(() => {
             // Initialize rectangular marking after DOM elements are ready
             window.initializeRectangleMarking((selectionData) => {
-                console.log('Selection event:', selectionData);
+                isDebugging && console.log('Selection event:', selectionData);
                 // TODO: Implement Spotfire marking API integration here
             }, mod, allRows);
         }, 100);

@@ -26,6 +26,7 @@ function createRangePlot(data, mod, allRows) {
     data.data.forEach((item, index) => {
         const rowDiv = document.createElement('div');
         rowDiv.className = 'plot-row';
+        rowDiv.setAttribute('data-row-index', index);
 
         // Calculate percentages for positioning
         const minPercent = ((item.min - absoluteMin) / range) * 100;
@@ -55,9 +56,9 @@ function createRangePlot(data, mod, allRows) {
                 
                 <!-- Labels -->
                 <div class="labels">
-                    <div class="label" style="left: ${minPercent}%;">${item.minFormatted || item.min}</div>
-                    <div class="label" style="left: ${maxPercent}%;">${item.maxFormatted || item.max}</div>
-                    <div class="value-label" style="left: ${valuePercent}%;">${item.valueFormatted || item.value}</div>
+                    <div class="label label-min" data-label-type="min" style="left: ${minPercent}%;">${item.minFormatted || item.min}</div>
+                    <div class="label label-max" data-label-type="max" style="left: ${maxPercent}%;">${item.maxFormatted || item.max}</div>
+                    <div class="value-label label-value" data-label-type="value" style="left: ${valuePercent}%;">${item.valueFormatted || item.value}</div>
                 </div>
             </div>
         `;

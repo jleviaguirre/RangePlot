@@ -1,6 +1,41 @@
-# My Visualization Mod
+# Range Plot Visualization Mod
 
-Here you should add some information about the visualization mod.
+A Spotfire visualization mod that displays horizontal range plots with minimum, maximum, and current values. This mod is perfect for visualizing data ranges, performance metrics, temperature ranges, or any scenario where you need to show a value within its min-max context.
+
+## About the Range Plot
+
+The Range Plot mod creates an intuitive horizontal visualization that displays:
+
+- **Range segments**: Horizontal bars showing the full range from minimum to maximum values
+- **Current value indicators**: Visual markers showing where the current value falls within the range
+- **Color mapping**: Segments can be colored based on data categories or values
+- **Interactive features**: 
+  - Tooltips with detailed information on hover
+  - Click and Ctrl+click marking for data selection
+  - Rectangular selection for marking multiple data points
+  - Configurable label visibility (min, max, value labels)
+
+### How it works
+
+1. **Data Input**: Configure four axes in Spotfire:
+   - Range by (categorical): Categories for your data rows
+   - Min (continuous): Minimum values for each range
+   - Max (continuous): Maximum values for each range  
+   - Value (continuous): Current values to display within ranges
+
+2. **Visualization**: Each row becomes a horizontal range with:
+   - A colored segment from min to max
+   - A value indicator showing the current position
+   - Optional labels displaying formatted values
+
+3. **Interaction**: Users can:
+   - Hover for detailed tooltips
+   - Click to mark single data points
+   - Use Ctrl+click for multi-selection
+   - Draw rectangles to select multiple ranges
+   - Configure label visibility via settings icon (edit mode)
+
+The mod automatically formats numbers according to Spotfire's formatting settings and respects color schemes applied to the data.
 
 ## Getting started
 

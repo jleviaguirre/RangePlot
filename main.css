@@ -4,7 +4,7 @@ body {
 }
 
 #mod-container {
-    max-width: 50%;
+    /* max-width: 50%; */
     margin: 0 auto;
     padding: 20px;
     /* background-color: #2a2a2a; */
@@ -61,13 +61,13 @@ body {
     position: absolute;
     top: 50%;
     transform: translate(-50%, -50%);
-    width: 1em;
-    height: 1em;
     background-color: #cacaca;
     border: 1px solid #b4b4b4;
     border-radius: 50%;
     z-index: 3;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: clamp(10px, 2.5vw, 20px);
+    height: clamp(10px, 2.5vw, 20px);
 }
 
 
@@ -76,8 +76,8 @@ body {
     position: absolute;
     top: 50%;
     transform: translate(-50%, -50%);
-    width: 1em;
-    height: 1em;
+    width: clamp(8px, 2vw, 16px);
+    height: clamp(8px, 2vw, 16px);
     background-color: #facc15;
     border: 1px solid #b4b4b4;
     border-radius: 50%;

@@ -539,3 +539,4 @@ const addElementClickHandlers = (mod, allRows) => {
 window.initializeRectangleMarking = initializeRectangleMarking;
 window.setCurrentDataView = setCurrentDataView;
 window.addPlotRowClickHandlers = addPlotRowClickHandlers;
+window.getSelectedRowIndices = getSelectedRowIndices;

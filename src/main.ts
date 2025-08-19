@@ -2,7 +2,12 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
     /**
      * Create the read function.
      */
-    const reader = mod.createReader(mod.visualization.data(), mod.windowSize(), mod.property("myProperty"));
+    const reader = mod.createReader(
+        mod.visualization.data(), 
+        mod.windowSize(), 
+        mod.property("myProperty"),
+        mod.property("labelVisibility")
+    );
 
     /**
      * Store the context.
@@ -14,7 +19,7 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
      */
     reader.subscribe(render);
 
-    async function render(dataView: Spotfire.DataView, windowSize: Spotfire.Size, prop: Spotfire.ModProperty<string>) {
+    async function render(dataView: Spotfire.DataView, windowSize: Spotfire.Size, prop: Spotfire.ModProperty<string>, labelVisibility: Spotfire.ModProperty<string>) {
         /**
          * Set the current dataView for rectangular marking
          */
@@ -42,16 +47,15 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
 
         // Check if we have the required data
         if (!rangeByHierarchy || !minAxis || !maxAxis || !valueAxis) {
-            // Show sample data if no real data is configured
-            console.log("Missing required data, showing sample data");
-            renderSampleData();
+            // No data configured
+            console.log("Missing required data");
             context.signalRenderComplete();
             return;
         }
 
         const rangeByRoot = await rangeByHierarchy.root();
         if (!rangeByRoot) {
-            renderSampleData();
+            console.log("No range by root data");
             context.signalRenderComplete();
             return;
         }
@@ -69,7 +73,7 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
         const allRows = await dataView.allRows();
         
         if (!allRows || allRows.length === 0) {
-            renderSampleData();
+            console.log("No data rows available");
             context.signalRenderComplete();
             return;
         }
@@ -139,35 +143,28 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
             if (typeof (window as any).addPlotRowClickHandlers === 'function') {
                 (window as any).addPlotRowClickHandlers(mod, allRows);
             }
+            
+            // Initialize context menu for label visibility (only in edit mode)
+            if (typeof (window as any).initializeContextMenu === 'function') {
+                (window as any).initializeContextMenu(mod, labelVisibility);
+            }
+            
+            // Apply label visibility settings
+            if (typeof (window as any).applyLabelVisibility === 'function') {
+                (window as any).applyLabelVisibility();
+            }
+            
+            // Update settings icon position
+            if (typeof (window as any).updateSettingsIconPosition === 'function') {
+                (window as any).updateSettingsIconPosition();
+            }
         } else {
-            renderSampleData();
+            console.log("No valid data to render");
         }
 
         /**
          * Signal that the mod is ready for export.
          */
         context.signalRenderComplete();
-    }
-
-    function renderSampleData() {
-        const container = document.querySelector("#mod-container");
-        if (container) {
-            container.innerHTML = '<div id="plot-container"></div>';
-            
-            const sampleData = {
-                "option1": "temperature",
-                "option2": "celsius",
-                "data": [
-                    {"min": 52, "max": 83.5, "value": 65.9, "minFormatted": "52.0°", "maxFormatted": "83.5°", "valueFormatted": "65.9°", "category": "today", "color": "#ff6b6b", "rowIndex": 0},
-                    {"min": 55.8, "max": 83.5, "value": 69.1, "minFormatted": "55.8°", "maxFormatted": "83.5°", "valueFormatted": "69.1°", "category": "yesterday", "color": "#4ecdc4", "rowIndex": 1},
-                    {"min": 52, "max": 88.5, "value": 70.4, "minFormatted": "52.0°", "maxFormatted": "88.5°", "valueFormatted": "70.4°", "category": "week", "color": "#45b7d1", "rowIndex": 2},
-                    {"min": 38.5, "max": 88.5, "value": 65.9, "minFormatted": "38.5°", "maxFormatted": "88.5°", "valueFormatted": "65.9°", "category": "month", "color": "#96ceb4", "rowIndex": 3},
-                    {"min": -0.8, "max": 88.5, "value": 42.1, "minFormatted": "-0.8°", "maxFormatted": "88.5°", "valueFormatted": "42.1°", "category": "year", "color": "#feca57", "rowIndex": 4}
-                ]
-            };
-
-            // For sample data, pass null for mod and allRows since we don't have real Spotfire data
-            (window as any).createRangePlot(sampleData, null, null);
-        }
     }
 });

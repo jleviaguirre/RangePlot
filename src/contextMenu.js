@@ -1,18 +1,14 @@
 /*
-* Copyright © 2025. Cloud Software Group, Inc.
-* This file is subject to the license terms contained
-* in the license file that is distributed with this file.
-*/
+ * Copyright © 2025. Cloud Software Group, Inc.
+ * This file is subject to the license terms contained
+ * in the license file that is distributed with this file.
+ */
 
 /**
  * Context menu for label visibility settings
  * Uses a settings icon instead of right-click to avoid conflicts
  */
 
-// Debug flag for context menu logging
-isDebugging = true;
-
-let contextMenu = null;
 let settingsIcon = null;
 let currentMod = null;
 let currentLabelProperty = null;
@@ -21,14 +17,10 @@ let currentLabelProperty = null;
  * Initialize context menu functionality with settings icon
  */
 const initializeContextMenu = (mod, labelProperty, hasValueAxis) => {
-    isDebugging && console.log('Initializing context menu...', mod, labelProperty, hasValueAxis);
     currentMod = mod;
     currentLabelProperty = labelProperty;
     
     // Remove existing elements if they exist
-    if (contextMenu) {
-        document.body.removeChild(contextMenu);
-    }
     if (settingsIcon) {
         document.body.removeChild(settingsIcon);
     }
@@ -36,28 +28,16 @@ const initializeContextMenu = (mod, labelProperty, hasValueAxis) => {
     // Create settings icon
     createSettingsIcon();
     
-    // Create context menu element
-    contextMenu = document.createElement('div');
-    contextMenu.className = 'range-plot-context-menu';
-    contextMenu.style.display = 'none';
-    
-    // Add CSS for context menu and settings icon
+    // Add CSS for settings icon
     addContextMenuStyles();
     
-    // Add event listeners
-    document.addEventListener('click', hideContextMenu);
-    
-    document.body.appendChild(contextMenu);
     document.body.appendChild(settingsIcon);
-    
-    isDebugging && console.log('Context menu initialized. Settings icon should be visible at:', settingsIcon.style.left, settingsIcon.style.top);
 };
 
 /**
  * Create the settings icon
  */
 const createSettingsIcon = () => {
-    isDebugging && console.log('Creating settings icon...');
     settingsIcon = document.createElement('div');
     settingsIcon.className = 'range-plot-settings-icon';
     settingsIcon.title = 'Label Settings';
@@ -73,25 +53,15 @@ const createSettingsIcon = () => {
     
     // Add click handler
     settingsIcon.addEventListener('click', (e) => {
-        console.log('⚙️ Settings icon clicked');
         e.stopPropagation();
         e.preventDefault();
         
-        // Check if we have marking before showing popout
-        if (typeof window.getSelectedRowIndices === 'function') {
-            const markedRows = window.getSelectedRowIndices();
-            console.log('⚙️ Current marked rows before popout:', Array.from(markedRows || []));
-        }
-        
         const rect = settingsIcon.getBoundingClientRect();
-        // showContextMenu(rect.left, rect.bottom + 5);
         showPopoutMenu(rect.left, rect.bottom + 5);
     });
     
     // Add hover handlers to show/hide settings icon
     setupHoverHandlers();
-    
-    isDebugging && console.log('Settings icon created and positioned');
 };
 
 /**
@@ -130,7 +100,7 @@ const setupHoverHandlers = () => {
 };
 
 /**
- * Add CSS styles for context menu and settings icon
+ * Add CSS styles for settings icon
  */
 const addContextMenuStyles = () => {
     const existingStyle = document.getElementById('context-menu-styles');
@@ -163,99 +133,6 @@ const addContextMenuStyles = () => {
             fill: #555;
             opacity: 0.4;
         }
-        
-        .range-plot-context-menu {
-            position: fixed;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            padding: 8px 0;
-            min-width: 180px;
-            z-index: 10000;
-            font-family: Arial, sans-serif;
-            font-size: 13px;
-        }
-        
-        .context-menu-item {
-            padding: 8px 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .context-menu-item:hover {
-            background-color: #f5f5f5;
-        }
-        
-        .context-menu-item.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .context-menu-item.disabled:hover {
-            background-color: transparent;
-        }
-        
-        .context-menu-separator {
-            height: 1px;
-            background-color: #e0e0e0;
-            margin: 4px 0;
-        }
-        
-        .context-menu-header {
-            padding: 8px 16px;
-            font-weight: bold;
-            color: #666;
-            border-bottom: 1px solid #e0e0e0;
-            margin-bottom: 4px;
-        }
-        
-        .checkbox-indicator {
-            width: 16px;
-            height: 16px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-left: 8px;
-        }
-        
-        .checkbox-indicator.checked {
-            background-color: #2563eb;
-            border-color: #2563eb;
-            color: white;
-        }
-        
-        .checkbox-indicator.checked::after {
-            content: "✓";
-            font-size: 12px;
-        }
-        
-        .radio-indicator {
-            width: 16px;
-            height: 16px;
-            border: 1px solid #ccc;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-left: 8px;
-        }
-        
-        .radio-indicator.checked {
-            border-color: #2563eb;
-        }
-        
-        .radio-indicator.checked::after {
-            content: "";
-            width: 8px;
-            height: 8px;
-            background-color: #2563eb;
-            border-radius: 50%;
-        }
     `;
     
     document.head.appendChild(style);
@@ -277,94 +154,23 @@ const updateSettingsIconPosition = () => {
 };
 
 /**
- * Show the context menu at specified coordinates
- */
-const showContextMenu = (x, y) => {
-    if (!currentLabelProperty) {
-        isDebugging && console.warn('No label property available for context menu');
-        return;
-    }
-    
-    isDebugging && console.log('Showing label settings menu');
-    
-    // Get current label visibility settings
-    const currentSettings = getLabelVisibilitySettings();
-    
-    // Build context menu content
-    const isNoneMode = currentSettings.labelMode === 'none';
-    contextMenu.innerHTML = `
-        <div class="context-menu-header">Label Visibility</div>
-        <div class="context-menu-item ${isNoneMode ? 'disabled' : ''}" data-action="toggle-min">
-            <span>Show Min Labels</span>
-            <div class="checkbox-indicator ${currentSettings.min && !isNoneMode ? 'checked' : ''}"></div>
-        </div>
-        <div class="context-menu-item ${isNoneMode ? 'disabled' : ''}" data-action="toggle-max">
-            <span>Show Max Labels</span>
-            <div class="checkbox-indicator ${currentSettings.max && !isNoneMode ? 'checked' : ''}"></div>
-        </div>
-        <div class="context-menu-item ${isNoneMode ? 'disabled' : ''}" data-action="toggle-value">
-            <span>Show Value Labels</span>
-            <div class="checkbox-indicator ${currentSettings.value && !isNoneMode ? 'checked' : ''}"></div>
-        </div>
-        <div class="context-menu-separator"></div>
-        <div class="context-menu-header">Show Labels For</div>
-        <div class="context-menu-item" data-action="labels-all">
-            <span>All Rows</span>
-            <div class="radio-indicator ${(!currentSettings.labelMode || currentSettings.labelMode === 'all') ? 'checked' : ''}"></div>
-        </div>
-        <div class="context-menu-item" data-action="labels-marked">
-            <span>Marked Rows Only</span>
-            <div class="radio-indicator ${currentSettings.labelMode === 'marked' ? 'checked' : ''}"></div>
-        </div>
-        <div class="context-menu-item" data-action="labels-none">
-            <span>None</span>
-            <div class="radio-indicator ${currentSettings.labelMode === 'none' ? 'checked' : ''}"></div>
-        </div>
-    `;
-    
-    // Add click handlers
-    contextMenu.querySelectorAll('.context-menu-item').forEach(item => {
-        item.addEventListener('click', handleContextMenuClick);
-    });
-    
-    // Position and show context menu
-    contextMenu.style.left = x + 'px';
-    contextMenu.style.top = y + 'px';
-    contextMenu.style.display = 'block';
-    
-    // Adjust position if menu goes off screen
-    const rect = contextMenu.getBoundingClientRect();
-    if (rect.right > window.innerWidth) {
-        contextMenu.style.left = (x - rect.width) + 'px';
-    }
-    if (rect.bottom > window.innerHeight) {
-        contextMenu.style.top = (y - rect.height) + 'px';
-    }
-};
-
-/**
  * Show the Spotfire popout menu using Mods API
  */
 const showPopoutMenu = (x, y) => {
     if (!currentMod || !currentLabelProperty) {
-        isDebugging && console.warn('No mod or label property available for popout');
+        console.warn('No mod or label property available for popout');
         return;
     }
-    
-    isDebugging && console.log('Showing Spotfire popout at coordinates:', x, y);
     
     // Get current settings directly from the Mod Property
     const currentSettings = getLabelVisibilitySettings();
     const isNoneMode = currentSettings.labelMode === 'none';
     
-    console.log('🎯 Creating popout with settings:', currentSettings);
-    console.log('🎯 Is none mode:', isNoneMode);
-    
     // Helper function to check property values (official pattern)
     const is = (property, value) => property === value;
     
     // Get popout components
-    const { radioButton, checkbox } = currentMod.controls.popout.components;
+    const { radioButton, checkbox, button } = currentMod.controls.popout.components;
     const { section } = currentMod.controls.popout;
     
     // Create label visibility checkboxes
@@ -375,8 +181,6 @@ const showPopoutMenu = (x, y) => {
         checked: Boolean(currentSettings.min)
     });
     
-    console.log('📦 Created minCheckbox with:', { enabled: !isNoneMode, checked: Boolean(currentSettings.min) });
-    
     const maxCheckbox = checkbox({ 
         enabled: !isNoneMode, 
         name: "max", 
@@ -384,16 +188,12 @@ const showPopoutMenu = (x, y) => {
         checked: Boolean(currentSettings.max)
     });
     
-    console.log('📦 Created maxCheckbox with:', { enabled: !isNoneMode, checked: Boolean(currentSettings.max) });
-    
     const valueCheckbox = checkbox({ 
         enabled: !isNoneMode, 
         name: "value", 
         text: "Show Value Labels", 
         checked: Boolean(currentSettings.value)
     });
-    
-    console.log('📦 Created valueCheckbox with:', { enabled: !isNoneMode, checked: Boolean(currentSettings.value) });
     
     // Create label mode radio buttons
     const allRadio = radioButton({ 
@@ -425,23 +225,17 @@ const showPopoutMenu = (x, y) => {
         x: x, 
         y: y, 
         autoClose: true,
-        alignment: "Bottom",
+        alignment: "Top",
         onChange: (e) => {
-            console.log('🔄 Popout onChange triggered with event:', e);
-            console.log('🔄 Event details - name:', e.name, 'value:', e.value, 'checked:', e.checked);
-            
             // Get fresh settings from Mod Property for each change
             const freshSettings = getLabelVisibilitySettings();
-            console.log('🔄 Fresh settings from Mod Property:', freshSettings);
             
             // Handle radio button changes for label mode
             if (e.name === "labelMode" && e.value) {
-                console.log('📻 Handling radio button change to:', e.value);
                 freshSettings.labelMode = e.value;
                 
                 // If switching to none mode, clear all checkboxes
                 if (e.value === 'none') {
-                    console.log('❌ Clearing all checkboxes due to none mode');
                     freshSettings.min = false;
                     freshSettings.max = false;
                     freshSettings.value = false;
@@ -453,35 +247,23 @@ const showPopoutMenu = (x, y) => {
             }
             // Handle checkbox changes - use e.value instead of e.checked
             else if (e.name === "min") {
-                console.log('☑️ Handling min checkbox change - e.checked:', e.checked, 'e.value:', e.value);
                 freshSettings.min = Boolean(e.value);
-                console.log('☑️ About to save settings:', freshSettings);
                 saveLabelVisibilitySettings(freshSettings);
-                console.log('☑️ About to update label visibility');
                 updateLabelVisibility(freshSettings);
-                console.log('☑️ Finished handling min checkbox');
             }
             else if (e.name === "max") {
-                console.log('☑️ Handling max checkbox change - e.checked:', e.checked, 'e.value:', e.value);
                 freshSettings.max = Boolean(e.value);
-                console.log('☑️ About to save settings:', freshSettings);
                 saveLabelVisibilitySettings(freshSettings);
-                console.log('☑️ About to update label visibility');
                 updateLabelVisibility(freshSettings);
-                console.log('☑️ Finished handling max checkbox');
             }
             else if (e.name === "value") {
-                console.log('☑️ Handling value checkbox change - e.checked:', e.checked, 'e.value:', e.value);
                 freshSettings.value = Boolean(e.value);
-                console.log('☑️ About to save settings:', freshSettings);
                 saveLabelVisibilitySettings(freshSettings);
-                console.log('☑️ About to update label visibility');
                 updateLabelVisibility(freshSettings);
-                console.log('☑️ Finished handling value checkbox');
             }
         },
         onClosed: () => {
-            isDebugging && console.log('Popout closed');
+            // Popout closed - no action needed
         }
     }, () => [
         section({ 
@@ -494,88 +276,33 @@ const showPopoutMenu = (x, y) => {
         })
     ]);
 };
-/**
- * Hide the context menu
- */
-const hideContextMenu = () => {
-    if (contextMenu) {
-        contextMenu.style.display = 'none';
-    }
-};
-
-/**
- * Handle context menu item clicks
- */
-const handleContextMenuClick = (e) => {
-    e.stopPropagation();
-    
-    // Don't handle clicks on disabled items
-    if (e.currentTarget.classList.contains('disabled')) {
-        return;
-    }
-    
-    const action = e.currentTarget.getAttribute('data-action');
-    const currentSettings = getLabelVisibilitySettings();
-    
-    switch (action) {
-        case 'toggle-min':
-            currentSettings.min = !currentSettings.min;
-            break;
-        case 'toggle-max':
-            currentSettings.max = !currentSettings.max;
-            break;
-        case 'toggle-value':
-            currentSettings.value = !currentSettings.value;
-            break;
-        case 'labels-all':
-            currentSettings.labelMode = 'all';
-            break;
-        case 'labels-marked':
-            currentSettings.labelMode = 'marked';
-            break;
-        case 'labels-none':
-            currentSettings.labelMode = 'none';
-            break;
-    }
-    
-    // Save settings and update display
-    saveLabelVisibilitySettings(currentSettings);
-    updateLabelVisibility(currentSettings);
-    hideContextMenu();
-};
 
 /**
  * Get current label visibility settings from mod property
  */
 const getLabelVisibilitySettings = () => {
     if (!currentLabelProperty) {
-        console.warn('🔴 No label property available, returning defaults');
-        return { min: true, max: true, value: true, labelMode: 'marked' };
+        console.warn('No label property available, returning defaults');
+        return { min: true, max: true, value: true, labelMode: 'all' };
     }
     
     try {
         const settingsJson = currentLabelProperty.value();
-        console.log('🔍 Raw settings JSON from Mod Property:', settingsJson);
-        
         const settings = JSON.parse(settingsJson);
-        console.log('🔍 Parsed settings object:', settings);
         
         // Ensure all properties have default values
-        const defaultSettings = { min: true, max: true, value: true, labelMode: 'marked' };
+        const defaultSettings = { min: true, max: true, value: true, labelMode: 'all' };
         const mergedSettings = { ...defaultSettings, ...settings };
-        
-        console.log('🔍 Merged settings with defaults:', mergedSettings);
         
         // Ensure labelMode has a valid value
         if (!mergedSettings.labelMode || !['all', 'marked', 'none'].includes(mergedSettings.labelMode)) {
-            mergedSettings.labelMode = 'marked';
+            mergedSettings.labelMode = 'all';
         }
         
-        console.log('🔍 Final settings being returned:', mergedSettings);
         return mergedSettings;
     } catch (error) {
-        console.error('🔴 Failed to parse label visibility settings:', error);
-        return { min: true, max: true, value: true, labelMode: 'marked' };
+        console.error('Failed to parse label visibility settings:', error);
+        return { min: true, max: true, value: true, labelMode: 'all' };
     }
 };
 
@@ -584,24 +311,15 @@ const getLabelVisibilitySettings = () => {
  */
 const saveLabelVisibilitySettings = (settings) => {
     if (!currentLabelProperty) {
-        console.warn('🔴 No label property available to save settings');
+        console.warn('No label property available to save settings');
         return;
     }
     
     try {
-        console.log('💾 Attempting to save settings:', settings);
         const settingsJson = JSON.stringify(settings);
-        console.log('💾 Settings JSON to save:', settingsJson);
-        
         currentLabelProperty.set(settingsJson);
-        console.log('✅ Successfully saved settings to Mod Property');
-        
-        // Verify the save by reading it back
-        const readBack = currentLabelProperty.value();
-        console.log('🔍 Read back from Mod Property:', readBack);
-        
     } catch (error) {
-        console.error('🔴 Failed to save label visibility settings:', error);
+        console.error('Failed to save label visibility settings:', error);
     }
 };
 
@@ -609,8 +327,6 @@ const saveLabelVisibilitySettings = (settings) => {
  * Update label visibility in the DOM based on settings
  */
 const updateLabelVisibility = (settings) => {
-    console.log('🔄 updateLabelVisibility called with settings:', settings);
-    
     // Get currently marked/selected row indices - avoid interfering with existing marking
     let selectedRowIndices = new Set();
     
@@ -620,10 +336,8 @@ const updateLabelVisibility = (settings) => {
             selectedRowIndices = window.getSelectedRowIndices() || new Set();
         }
     } catch (error) {
-        isDebugging && console.warn('Could not get selected row indices:', error);
+        console.warn('Could not get selected row indices:', error);
     }
-    
-    console.log('🔄 Selected row indices:', Array.from(selectedRowIndices));
     
     // Determine which rows should show labels based on labelMode
     let shouldShowLabelsForRow = (rowIndex) => {
@@ -638,7 +352,6 @@ const updateLabelVisibility = (settings) => {
     
     // Hide/show min labels
     const minLabels = document.querySelectorAll('[data-label-type="min"]');
-    console.log('🔄 Found', minLabels.length, 'min labels');
     minLabels.forEach(label => {
         const plotRow = label.closest('.plot-row');
         const rowIndex = plotRow ? parseInt(plotRow.getAttribute('data-row-index')) : -1;
@@ -648,7 +361,6 @@ const updateLabelVisibility = (settings) => {
     
     // Hide/show max labels
     const maxLabels = document.querySelectorAll('[data-label-type="max"]');
-    console.log('🔄 Found', maxLabels.length, 'max labels');
     maxLabels.forEach(label => {
         const plotRow = label.closest('.plot-row');
         const rowIndex = plotRow ? parseInt(plotRow.getAttribute('data-row-index')) : -1;
@@ -658,15 +370,12 @@ const updateLabelVisibility = (settings) => {
     
     // Hide/show value labels
     const valueLabels = document.querySelectorAll('[data-label-type="value"]');
-    console.log('🔄 Found', valueLabels.length, 'value labels');
     valueLabels.forEach(label => {
         const plotRow = label.closest('.plot-row');
         const rowIndex = plotRow ? parseInt(plotRow.getAttribute('data-row-index')) : -1;
         const shouldShow = settings.value && shouldShowLabelsForRow(rowIndex);
         label.style.display = shouldShow ? 'block' : 'none';
     });
-    
-    console.log('🔄 Finished updating label visibility');
 };
 
 /**
@@ -681,23 +390,14 @@ const applyLabelVisibility = () => {
  * Apply label visibility with specific marking state (called from main.ts)
  */
 const applyLabelVisibilityWithMarking = (markedRowIndices) => {
-    console.log('🔄 applyLabelVisibilityWithMarking called with marked indices:', Array.from(markedRowIndices));
-    
     const settings = getLabelVisibilitySettings();
-    console.log('🔄 applyLabelVisibilityWithMarking using settings:', settings);
-    
     updateLabelVisibilityWithMarking(settings, markedRowIndices);
-    
-    console.log('🔄 applyLabelVisibilityWithMarking completed');
 };
 
 /**
  * Update label visibility with specific marking state
  */
 const updateLabelVisibilityWithMarking = (settings, markedRowIndices) => {
-    console.log('🔄 updateLabelVisibilityWithMarking called with settings:', settings);
-    console.log('🔄 updateLabelVisibilityWithMarking marked indices:', Array.from(markedRowIndices || []));
-    
     // Use the provided marking state instead of getting it from rectangleSelection
     const selectedRowIndices = markedRowIndices || new Set();
     
@@ -714,7 +414,6 @@ const updateLabelVisibilityWithMarking = (settings, markedRowIndices) => {
     
     // Hide/show min labels
     const minLabels = document.querySelectorAll('[data-label-type="min"]');
-    console.log('🔄 updateLabelVisibilityWithMarking found', minLabels.length, 'min labels');
     minLabels.forEach(label => {
         const plotRow = label.closest('.plot-row');
         const rowIndex = plotRow ? parseInt(plotRow.getAttribute('data-row-index')) : -1;
@@ -724,7 +423,6 @@ const updateLabelVisibilityWithMarking = (settings, markedRowIndices) => {
     
     // Hide/show max labels
     const maxLabels = document.querySelectorAll('[data-label-type="max"]');
-    console.log('🔄 updateLabelVisibilityWithMarking found', maxLabels.length, 'max labels');
     maxLabels.forEach(label => {
         const plotRow = label.closest('.plot-row');
         const rowIndex = plotRow ? parseInt(plotRow.getAttribute('data-row-index')) : -1;
@@ -734,85 +432,27 @@ const updateLabelVisibilityWithMarking = (settings, markedRowIndices) => {
     
     // Hide/show value labels
     const valueLabels = document.querySelectorAll('[data-label-type="value"]');
-    console.log('🔄 updateLabelVisibilityWithMarking found', valueLabels.length, 'value labels');
     valueLabels.forEach(label => {
         const plotRow = label.closest('.plot-row');
         const rowIndex = plotRow ? parseInt(plotRow.getAttribute('data-row-index')) : -1;
         const shouldShow = settings.value && shouldShowLabelsForRow(rowIndex);
         label.style.display = shouldShow ? 'block' : 'none';
     });
-    
-    console.log('🔄 updateLabelVisibilityWithMarking completed');
 };
 
 /**
  * Clean up context menu
  */
 const cleanupContextMenu = () => {
-    if (contextMenu) {
-        document.body.removeChild(contextMenu);
-        contextMenu = null;
-    }
-    
     if (settingsIcon) {
         document.body.removeChild(settingsIcon);
         settingsIcon = null;
     }
     
-    document.removeEventListener('click', hideContextMenu);
-    
     const style = document.getElementById('context-menu-styles');
     if (style) {
         style.remove();
     }
-};
-
-/**
- * Test function to manually show context menu (for debugging)
- */
-const testContextMenu = () => {
-    isDebugging && console.log('Testing context menu...');
-    showContextMenu(100, 100);
-};
-
-/**
- * Debug function to inspect current state
- */
-const debugCurrentState = () => {
-    console.log('🔍 === DEBUG CURRENT STATE ===');
-    console.log('🔍 currentMod:', !!currentMod);
-    console.log('🔍 currentLabelProperty:', !!currentLabelProperty);
-    
-    if (currentLabelProperty) {
-        try {
-            const raw = currentLabelProperty.value();
-            console.log('🔍 Raw Mod Property value:', raw);
-            const parsed = JSON.parse(raw);
-            console.log('🔍 Parsed Mod Property:', parsed);
-        } catch (e) {
-            console.error('🔍 Error reading Mod Property:', e);
-        }
-    }
-    
-    const settings = getLabelVisibilitySettings();
-    console.log('🔍 getLabelVisibilitySettings() returns:', settings);
-    
-    if (typeof window.getSelectedRowIndices === 'function') {
-        const marked = window.getSelectedRowIndices();
-        console.log('🔍 Currently marked rows:', Array.from(marked || []));
-    }
-    
-    console.log('🔍 === END DEBUG ===');
-};
-
-/**
- * Test function to manually set settings
- */
-const testSetSettings = (testSettings) => {
-    console.log('🧪 Testing setting:', testSettings);
-    saveLabelVisibilitySettings(testSettings);
-    const readBack = getLabelVisibilitySettings();
-    console.log('🧪 Read back:', readBack);
 };
 
 // Export functions
@@ -821,6 +461,3 @@ window.updateSettingsIconPosition = updateSettingsIconPosition;
 window.applyLabelVisibility = applyLabelVisibility;
 window.applyLabelVisibilityWithMarking = applyLabelVisibilityWithMarking;
 window.cleanupContextMenu = cleanupContextMenu;
-window.testContextMenu = testContextMenu; // For debugging
-window.debugCurrentState = debugCurrentState; // For debugging
-window.testSetSettings = testSetSettings; // For debugging

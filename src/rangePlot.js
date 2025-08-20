@@ -1,6 +1,19 @@
-// Debug flag for range plot logging
-isDebugging = false;
+﻿/*
+ * Copyright Â© 2025. Cloud Software Group, Inc.
+ * This file is subject to the license terms contained
+ * in the license file that is distributed with this file.
+ */
 
+/**
+ * Range Plot visualization for Spotfire Mods
+ * Creates horizontal range plots with optional value indicators and labels
+ */
+
+/**
+ * Parse JSON string data for range plot
+ * @param {string} jsonString - JSON string containing plot data
+ * @returns {Object|null} Parsed data object or null if invalid
+ */
 function parseRangePlotData(jsonString) {
     try {
         return JSON.parse(jsonString);
@@ -151,7 +164,6 @@ function createRangePlot(data, mod, allRows) {
         setTimeout(() => {
             // Initialize rectangular marking after DOM elements are ready
             window.initializeRectangleMarking((selectionData) => {
-                isDebugging && console.log('Selection event:', selectionData);
                 // TODO: Implement Spotfire marking API integration here
             }, mod, allRows);
         }, 100);

@@ -1,14 +1,4 @@
-// Set global debugging flag - controls all debug output across all files
-(window as any).RANGEPLOT_DEBUG_MODE = false;
-
-// Helper function for conditional logging (using global flag)
-const debugLog = (...args: any[]) => {
-    if ((window as any).RANGEPLOT_DEBUG_MODE) {
-        console.log('[RangePlot Debug]:', ...args);
-    }
-};
-
-Spotfire.initialize(async (mod: Spotfire.Mod) => {
+﻿Spotfire.initialize(async (mod: Spotfire.Mod) => {
     /**
      * Create the read function.
      */
@@ -84,7 +74,6 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
         const allRows = await dataView.allRows();
         
         if (!allRows || allRows.length === 0) {
-            debugLog("No data rows available");
             context.signalRenderComplete();
             return;
         }
@@ -130,7 +119,6 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
                         });
                     }
                 } catch (error) {
-                    debugLog("Error processing categorized row", i, error);
                     continue;
                 }
             }
@@ -156,7 +144,6 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
                         }
                     }
                 } catch (error) {
-                    debugLog("Error processing aggregated row", i, error);
                     continue;
                 }
             }
@@ -228,7 +215,6 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
                         }
                     }
                 } catch (error) {
-                    debugLog("Error getting marking state:", error);
                 }
                 
                 (window as any).applyLabelVisibilityWithMarking(markedRows);
@@ -239,7 +225,6 @@ Spotfire.initialize(async (mod: Spotfire.Mod) => {
                 (window as any).updateSettingsIconPosition();
             }
         } else {
-            debugLog("No valid data to render");
         }
 
         /**

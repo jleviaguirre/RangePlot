@@ -2,6 +2,8 @@
 
 A Spotfire visualization mod that displays horizontal range plots with minimum, maximum, and current values. This mod is perfect for visualizing data ranges, performance metrics, temperature ranges, or any scenario where you need to show a value within its min-max context.
 
+![Range Plot Demo](data/RangePlot.gif)
+
 ## About the Range Plot
 
 The Range Plot mod creates an intuitive horizontal visualization that displays:
